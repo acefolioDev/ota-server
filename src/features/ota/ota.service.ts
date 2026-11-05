@@ -235,6 +235,7 @@ export class OtaService {
         .upsert({
           create: { slug: input.appSlug, projectId },
           update: projectId ? { projectId } : {},
+          conflictOn: { slug: input.appSlug },
         });
       appId = app.id;
     } catch (error) {
@@ -266,6 +267,7 @@ export class OtaService {
         .upsert({
           create: { id: pending.id, ...updateData },
           update: updateData,
+          conflictOn: { id: pending.id },
         });
     } catch (error) {
       logPublishFailure("update-create", input, error);

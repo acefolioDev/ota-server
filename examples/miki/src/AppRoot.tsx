@@ -67,7 +67,7 @@ export default function AppRoot() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#F7F7F3',
+    backgroundColor: '#aaaa55',
     flex: 1,
   },
   content: {
