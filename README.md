@@ -2,6 +2,8 @@
 
 This service runs on Bun with Elpod/Elysia, PostgreSQL through Prisma 8, and a Preact/Vite admin dashboard.
 
+For step-by-step Expo React Native app configuration, publishing, and testing, see the [client integration guide](./docs/README.md).
+
 ## Configure and run
 
 1. Install Bun 1.4+ and PostgreSQL 15+.
