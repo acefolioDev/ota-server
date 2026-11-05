@@ -33,7 +33,7 @@ export function NotesScreen({
       <ScreenHeader
         eyebrow="YOUR QUIET CORNER"
         title="Miki"
-        subtitle="OTA test: update received."
+        subtitle="A simple note-taking app for your thoughts"
       />
       {storageError ? (
         <View accessibilityRole="alert" style={styles.errorBanner}>

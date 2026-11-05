@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNavigation } from './components/BottomNavigation';
@@ -8,8 +8,11 @@ import type { AppScreen, Note } from './types/note';
 import { NotesScreen } from './screens/NotesScreen';
 import { PinnedScreen } from './screens/PinnedScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { useOtaUpdates } from './hooks/useOtaUpdates';
 
 export default function AppRoot() {
+  const { isCheckingUpdates, checkForUpdate } = useOtaUpdates();
+
   const [activeScreen, setActiveScreen] = useState<AppScreen>('notes');
   const [editorVisible, setEditorVisible] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -25,6 +28,10 @@ export default function AppRoot() {
       setEditorVisible(false);
     }
   }
+
+  useEffect(() => {
+    checkForUpdate(true);
+  }, []);
 
   return (
     <SafeAreaProvider>
@@ -67,7 +74,7 @@ export default function AppRoot() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#aaaa55',
+    backgroundColor: '#F7F7F3',
     flex: 1,
   },
   content: {

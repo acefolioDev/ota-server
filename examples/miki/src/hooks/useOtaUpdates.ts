@@ -5,7 +5,7 @@ import { Alert } from 'react-native';
 export function useOtaUpdates() {
   const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
 
-  async function checkForUpdate() {
+  async function checkForUpdate(isAutomaticCheck = false) {
     if (!Updates.isEnabled) {
       Alert.alert(
         'Updates unavailable',
@@ -17,8 +17,11 @@ export function useOtaUpdates() {
     setIsCheckingUpdates(true);
     try {
       const update = await Updates.checkForUpdateAsync();
+
       if (!update.isAvailable) {
-        Alert.alert('You’re up to date', 'There are no new Miki updates right now.');
+        if (!isAutomaticCheck) {
+          Alert.alert('You’re up to date', 'There are no new Miki updates right now.');
+        }
         return;
       }
 
