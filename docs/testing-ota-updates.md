@@ -6,7 +6,7 @@ For app setup and native configuration, see the [Expo client integration guide](
 
 ## Before you start
 
-- Have a running server with its database migrated, a reachable HTTPS URL, persistent asset storage, and the publisher's required `DATABASE_URL`, `PUBLIC_URL`, and `OTA_ADMIN_TOKEN` configured.
+- Have a running server with its database migrated, a reachable HTTPS URL, persistent asset storage, and `PUBLIC_URL` plus `OTA_ADMIN_TOKEN` available to the publisher. The publisher sends release metadata through the server API and does not connect directly to PostgreSQL.
 - Choose an app slug, platform, exact runtime version, and channel. These must match the installed native build and the publish command.
 - Use a release-like native build with `expo-updates` enabled. Do not use Expo Go or a debug build that loads JavaScript from Metro.
 - Install and launch the native build **before** publishing the test update. This proves that the update arrives over the OTA path rather than being included in the original binary.
@@ -98,7 +98,7 @@ A successful `curl` manifest request alone only proves that the server can selec
 
 | Result | Check |
 |---|---|
-| Publisher fails | Confirm the project path and Expo export work, and that the publishing environment has the correct `DATABASE_URL`, `PUBLIC_URL`, and `OTA_ADMIN_TOKEN`. |
+| Publisher fails | Confirm the project path and Expo export work, and that `PUBLIC_URL` and `OTA_ADMIN_TOKEN` target the running OTA service. Check the service's database migration/deployment logs if the API reports a database error. |
 | Manifest returns `400` | Include protocol version `1`, platform `ios` or `android`, and a non-empty runtime-version header. |
 | Manifest returns `406` | Match the published app slug, platform, runtime version, and channel exactly; confirm an active release exists. The server does not currently support manifest code signing. |
 | Manifest returns `200`, launch asset does not | Check the exact asset URL, public URL, shared/persistent storage, and server logs. |

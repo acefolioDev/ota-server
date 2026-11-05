@@ -2,10 +2,29 @@ import type { ElpodElysia } from "@elpod/core";
 import { t } from "elysia";
 import { OtaService } from "./ota.service";
 
+type OtaControllerService = Omit<
+  Pick<
+    OtaService,
+    | "authorizeAdmin"
+    | "getManifest"
+    | "listApps"
+    | "publish"
+    | "rollback"
+    | "serveAsset"
+    | "setRollout"
+    | "storeAsset"
+  >,
+  "publish"
+> & {
+  publish(
+    input: Parameters<OtaService["publish"]>[0],
+  ): Promise<Pick<Awaited<ReturnType<OtaService["publish"]>>, "id" | "createdAt">>;
+};
+
 export class OtaController {
   static readonly inject = [OtaService] as const;
 
-  constructor(private readonly service: OtaService) {}
+  constructor(private readonly service: OtaControllerService) {}
 
   routes(app: ElpodElysia) {
     return app
@@ -73,6 +92,29 @@ export class OtaController {
         if (auth) return auth;
         return this.service.listApps();
       })
+      .post(
+        "/admin/updates",
+        async ({ body, headers, set }) => {
+          const auth = this.authorize(headers.authorization, set);
+          if (auth) return auth;
+
+          const update = await this.service.publish(body);
+          set.status = 201;
+          return { id: update.id, createdAt: update.createdAt };
+        },
+        {
+          body: t.Object({
+            appSlug: t.String({ minLength: 1 }),
+            projectId: t.Optional(t.String({ minLength: 1 })),
+            runtimeVersion: t.String({ minLength: 1 }),
+            platform: t.Union([t.Literal("ios"), t.Literal("android")]),
+            channel: t.String({ minLength: 1 }),
+            launchAsset: expoAssetSchema,
+            assets: t.Array(expoAssetSchema),
+            extra: t.Record(t.String(), t.Any()),
+          }),
+        },
+      )
       .put("/admin/assets/:filename", async ({ headers, params, request, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
@@ -144,6 +186,13 @@ export class OtaController {
 }
 
 const MAX_ASSET_UPLOAD_BYTES = 100 * 1024 * 1024;
+const expoAssetSchema = t.Object({
+  hash: t.Optional(t.String()),
+  key: t.String({ minLength: 1 }),
+  contentType: t.String({ minLength: 1 }),
+  fileExtension: t.Optional(t.String()),
+  url: t.String({ minLength: 1 }),
+});
 
 async function readRequestBody(
   request: Request,

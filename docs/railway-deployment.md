@@ -73,7 +73,7 @@ Install Bun locally and have the Expo app project available on your machine. Lin
 railway link
 ```
 
-Run the publisher through `railway run`. Railway injects the linked service's `DATABASE_URL`, `PUBLIC_URL`, and `OTA_ADMIN_TOKEN` into the local publish process. The script runs `npx expo export` on your workstation, uploads each content-addressed asset to the deployed service using the protected admin asset endpoint, and records the release in the Railway PostgreSQL database:
+Run the publisher through `railway run`. Railway injects the linked service's `PUBLIC_URL` and `OTA_ADMIN_TOKEN` into the local publish process. The script runs `npx expo export` on your workstation, uploads each content-addressed asset, and submits release metadata through the protected admin API. The Railway service writes the release to PostgreSQL using its private database connection; the publisher does not need `DATABASE_URL`:
 
 ```sh
 railway run bun run publish:update -- \
@@ -95,7 +95,7 @@ railway run bun run publish:update -- \
 
 Replace the project path, concrete runtime version, app slug (if needed), and channel with values from the native app build. For a different Expo config slug, pass `--app <slug>`. The publisher defaults the app slug from Expo config and reads `extra.eas.projectId` when configured.
 
-Confirm the publisher environment targets the Railway service/environment with its production `PUBLIC_URL`, `DATABASE_URL`, and `OTA_ADMIN_TOKEN`. `OTA_STORAGE_DIR` is needed by the running Railway API; local publish doesn't write into that local path because it uploads through the server.
+Confirm the publisher environment targets the Railway service/environment with its production `PUBLIC_URL` and `OTA_ADMIN_TOKEN`. `OTA_STORAGE_DIR` is needed by the running Railway API; local publish doesn't write into that local path because it uploads through the server.
 
 ## 6. Verify a published release and asset
 
@@ -133,8 +133,8 @@ Then install a native build configured for that Railway URL/channel/runtime and 
 | Pre-deploy migration fails | Read the Railway pre-deploy logs, confirm the private `DATABASE_URL`, and inspect Prisma migration status. Do not initialize/reset a populated database. |
 | Railway health check fails | Confirm the server starts, uses the injected `PORT`, and `/health/live` returns `200`. |
 | Manifest returns `406` | Check the release is active and app slug, platform, channel, and runtime version match exactly. |
-| Asset upload returns `401` | Confirm `railway run` is linked to the correct environment and receives the same `OTA_ADMIN_TOKEN` as the running server. |
-| Asset upload returns `404`/`5xx` | Check public networking, `PUBLIC_URL`, and service logs. |
+| Admin API request returns `401` | Confirm `railway run` is linked to the correct environment and receives the same `OTA_ADMIN_TOKEN` as the running server. |
+| Admin API request returns `404`/`5xx` | Check that the latest server version is deployed, and verify public networking, `PUBLIC_URL`, and service logs. |
 | Published manifest references unavailable files | Confirm the Railway volume is mounted at `/app/storage`, `OTA_STORAGE_DIR=/app/storage`, and the service has not lost its volume. |
 | Deploy succeeds but old bundles stop loading | Verify the storage volume persists and retain all assets referenced by releases that clients could still request. |
 

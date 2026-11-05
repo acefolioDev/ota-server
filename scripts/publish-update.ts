@@ -2,9 +2,6 @@ import { $ } from "bun";
 import { createHash } from "node:crypto";
 import { readdir, readFile, stat } from "node:fs/promises";
 import { extname, relative, resolve, sep } from "node:path";
-import { DbProvider } from "../src/infra/db.provider";
-import { db } from "../src/prisma/db";
-import { OtaService } from "../src/features/ota/ota.service";
 import type { ExpoAsset } from "../src/features/ota/ota.types";
 
 type Platform = "ios" | "android";
@@ -174,7 +171,7 @@ async function storeFile(
   const response = await fetch(`${publicOrigin}/api/admin/assets/${filename}`, {
     method: "PUT",
     headers: {
-      authorization: `Bearer ${adminToken}`,
+      authorization: "Bearer " + adminToken,
       "content-type": contentTypeFor(source),
     },
     body: bytes,
@@ -198,6 +195,41 @@ async function storeFile(
   };
 }
 
+async function publishUpdate(
+  publicOrigin: string,
+  adminToken: string,
+  input: {
+    appSlug: string;
+    projectId?: string;
+    runtimeVersion: string;
+    platform: Platform;
+    channel: string;
+    launchAsset: ExpoAsset;
+    assets: ExpoAsset[];
+    extra: Record<string, unknown>;
+  },
+): Promise<string> {
+  const response = await fetch(`${publicOrigin}/api/admin/updates`, {
+    method: "POST",
+    headers: {
+      authorization: "Bearer " + adminToken,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Could not publish update (HTTP ${response.status})${body ? `: ${body}` : ""}`,
+    );
+  }
+
+  const result = parseJson(await response.text(), "publish response");
+  const id = stringValue(result["id"]);
+  if (!id) throw new Error("Publish response does not contain an update ID");
+  return id;
+}
+
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
@@ -206,7 +238,19 @@ async function main(): Promise<void> {
   const options = parseOptions(process.argv.slice(2));
   if (!options) return;
   const adminToken = process.env["OTA_ADMIN_TOKEN"];
-  if (!adminToken) throw new Error("OTA_ADMIN_TOKEN is required to upload assets to the OTA server");
+  if (!adminToken) throw new Error("OTA_ADMIN_TOKEN is required to publish updates");
+  const configuredPublicUrl = process.env["PUBLIC_URL"];
+  if (!configuredPublicUrl) throw new Error("PUBLIC_URL is required to publish updates through the OTA server");
+  let publicOrigin: string;
+  try {
+    const parsedUrl = new URL(configuredPublicUrl);
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("PUBLIC_URL must use HTTP or HTTPS");
+    }
+    publicOrigin = parsedUrl.origin;
+  } catch (error) {
+    throw new Error(`Invalid PUBLIC_URL: ${configuredPublicUrl}`, { cause: error });
+  }
   const projectStat = await stat(options.projectDir);
   if (!projectStat.isDirectory()) throw new Error(`Expo project directory is not a directory: ${options.projectDir}`);
 
@@ -218,7 +262,11 @@ async function main(): Promise<void> {
   const exportMetadata = parseJson(await readFile(metadataPath, "utf8"), "dist/metadata.json");
   const fileMetadata = asRecord(exportMetadata["fileMetadata"], "fileMetadata");
   const platformMetadata = asRecord(fileMetadata[options.platform], `${options.platform} file metadata`);
-  const bundle = asRecord(platformMetadata["bundle"], "bundle metadata");
+  const bundleMetadata = platformMetadata["bundle"];
+  const bundle =
+    typeof bundleMetadata === "string"
+      ? { file: bundleMetadata }
+      : asRecord(bundleMetadata, "bundle metadata");
   const bundlePathValue = stringValue(bundle["file"]);
   if (!bundlePathValue) throw new Error("Expo metadata does not contain a bundle file");
 
@@ -250,23 +298,6 @@ async function main(): Promise<void> {
     }
   }
 
-  const configuredPublicUrl = process.env["PUBLIC_URL"];
-  if (!configuredPublicUrl && process.env["NODE_ENV"] === "production") {
-    throw new Error("PUBLIC_URL must be set in production so clients can download update assets");
-  }
-  const publicUrl =
-    configuredPublicUrl ?? `http://localhost:${process.env["PORT"] ?? "3000"}`;
-  let publicOrigin: string;
-  try {
-    const parsedUrl = new URL(publicUrl);
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-      throw new Error("PUBLIC_URL must use HTTP or HTTPS");
-    }
-    publicOrigin = parsedUrl.origin;
-  } catch (error) {
-    throw new Error(`Invalid PUBLIC_URL: ${publicUrl}`, { cause: error });
-  }
-
   const launch = await storeFile(bundlePath, publicOrigin, adminToken);
   const launchAsset = { ...launch.asset };
   delete launchAsset.fileExtension;
@@ -295,7 +326,7 @@ async function main(): Promise<void> {
     );
   }
 
-  await new OtaService(new DbProvider()).publish({
+  const updateId = await publishUpdate(publicOrigin, adminToken, {
     appSlug,
     projectId,
     runtimeVersion,
@@ -310,7 +341,7 @@ async function main(): Promise<void> {
   });
 
   console.log(
-    `Published ${appSlug} ${options.platform} runtime ${runtimeVersion} to ${options.channel} (${assets.length} assets).`,
+    `Published ${appSlug} ${options.platform} runtime ${runtimeVersion} to ${options.channel} (${assets.length} assets, update ${updateId}).`,
   );
 }
 
@@ -319,8 +350,17 @@ if (import.meta.main) {
     await main();
   } catch (error) {
     console.error(`OTA publish failed: ${error instanceof Error ? error.message : String(error)}`);
+    if (error instanceof Error) {
+      if ("code" in error && typeof error.code === "string") {
+        console.error(`Code: ${error.code}`);
+      }
+      if ("why" in error && typeof error.why === "string") {
+        console.error(`Why: ${error.why}`);
+      }
+      if ("fix" in error && typeof error.fix === "string") {
+        console.error(`Fix: ${error.fix}`);
+      }
+    }
     process.exitCode = 1;
-  } finally {
-    await db.close();
   }
 }

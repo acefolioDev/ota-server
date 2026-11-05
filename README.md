@@ -45,7 +45,7 @@ bun run publish:update -- \
 
 `--app` defaults to the resolved Expo config `slug`; `--project-id` defaults to `extra.eas.projectId`; `--runtime-version` defaults to a concrete string `runtimeVersion`. Runtime-version policies must be resolved and passed explicitly. Run the command separately for iOS and Android. The script runs `npx expo export --platform <platform> --output-dir dist`, reads the platform export metadata, hashes bundle/assets with base64url SHA-256, stores immutable files, and publishes the manifest record.
 
-Set `PUBLIC_URL` to the running server's reachable origin and set `OTA_ADMIN_TOKEN` for authenticated asset uploads. The publisher uploads hashed assets to the server's `/api/admin/assets/:filename` endpoint before writing the release to PostgreSQL. `OTA_STORAGE_DIR` is used by the API server for persistent asset storage; retain stored files while any installed client may still request a release.
+Set `PUBLIC_URL` to the running server's reachable origin and set `OTA_ADMIN_TOKEN` for authenticated publishing. The publisher uploads hashed assets and submits release metadata through the server's admin API; the API writes releases to PostgreSQL using its own database connection. The publisher does not need `DATABASE_URL`. `OTA_STORAGE_DIR` is used by the API server for persistent asset storage; retain stored files while any installed client may still request a release.
 
 ## Configure an Expo client
 

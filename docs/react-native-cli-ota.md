@@ -12,7 +12,7 @@ This guide connects a React Native CLI app (one that owns its `ios/` and `androi
 - A release identifier (the Expo app `slug`), a concrete runtime version, and a channel name. The values in this guide are examples; keep the values in the native builds and publish commands identical.
 - Bun and this OTA server repository for publishing.
 
-Do not put the server's `OTA_ADMIN_TOKEN` or database URL in the mobile app. The publisher uses them to upload assets and record a release.
+Do not put the server's `OTA_ADMIN_TOKEN` or database URL in the mobile app. The publisher uses the admin token to upload assets and submit release metadata through the server API; it does not connect directly to the database.
 
 ## 1. Add Expo modules to the existing React Native project
 
@@ -151,7 +151,7 @@ railway run bun run publish:update -- \
   --channel production
 ```
 
-Replace the project path and example values. Run these commands in a Railway-linked environment that provides the OTA service's `DATABASE_URL`, `PUBLIC_URL`, and `OTA_ADMIN_TOKEN`; or provide the equivalent secure variables locally. Never put secrets in source control or the client. The publisher exports the selected platform, uploads hashed bundles/assets to the server, and inserts the release record in PostgreSQL.
+Replace the project path and example values. Run these commands in a Railway-linked environment that provides the OTA service's `PUBLIC_URL` and `OTA_ADMIN_TOKEN`; or provide the equivalent secure variables locally. Never put secrets in source control or the client. The publisher exports the selected platform, uploads hashed bundles/assets, and submits release metadata through the authenticated server API. The server writes the release record to PostgreSQL using its private database connection.
 
 Publishing a platform does not publish the other platform. The client also will not receive a release with a different app slug, runtime version, or channel.
 

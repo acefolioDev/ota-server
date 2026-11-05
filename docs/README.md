@@ -86,9 +86,9 @@ bun run publish:update -- \
   --channel production
 ```
 
-The command exports the requested platform, reads Expo's export metadata, hashes and stores the launch bundle and referenced assets, then inserts an active release. It uses the Expo config slug unless `--app <slug>` is supplied. When `extra.eas.projectId` exists in the Expo config, it is linked automatically; `--project-id <uuid>` can override it. The client can use the `?app=<slug>` URL above regardless of whether a project ID is configured.
+The command exports the requested platform, reads Expo's export metadata, hashes and uploads the launch bundle and referenced assets, then submits an active release to the server admin API. It uses the Expo config slug unless `--app <slug>` is supplied. When `extra.eas.projectId` exists in the Expo config, it is linked automatically; `--project-id <uuid>` can override it. The client can use the `?app=<slug>` URL above regardless of whether a project ID is configured.
 
-The publisher needs the Railway database URL, the server's `PUBLIC_URL`, and `OTA_ADMIN_TOKEN`; it uploads assets to the server API, which writes to its own persistent `OTA_STORAGE_DIR`. `PUBLIC_URL` must be the externally reachable asset origin, not `localhost`, for devices outside the server host. Never expose `OTA_ADMIN_TOKEN` in the React Native app; it is only for management and publishing.
+The publisher needs the server's `PUBLIC_URL` and `OTA_ADMIN_TOKEN`; it uploads assets and submits release metadata through the authenticated server API. The server writes the release to PostgreSQL using its own database connection, so the publisher does not need the database URL. `PUBLIC_URL` must be the externally reachable asset origin, not `localhost`, for devices outside the server host. Never expose `OTA_ADMIN_TOKEN` in the React Native app; it is only for management and publishing.
 
 ## 3. Check that the server has a matching release
 
