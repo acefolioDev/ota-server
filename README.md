@@ -60,6 +60,8 @@ The server returns JSON manifests and does not currently sign manifests. Clients
 The dashboard uses `OTA_ADMIN_TOKEN` as a bearer token. Management requests are disabled with `503` until this secret is configured.
 
 - `GET /api/admin/apps` — applications and releases
+- `GET /api/admin/pending-updates` — failed publish attempts available for retry
+- `POST /api/admin/pending-updates/:id/retry` — retry recording a release using its already uploaded assets
 - `PATCH /api/admin/updates/:id/rollout` — body: `{"rollout": 0..100}`
 - `POST /api/admin/updates/:id/rollback` — deactivate a release; the next eligible active release is served
 

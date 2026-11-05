@@ -30,7 +30,7 @@ This repository is configured to build with its root `Dockerfile`. The API, admi
 3. Generate a Railway public domain in the OTA service's **Settings → Networking** (or attach your own HTTPS domain).
 4. Set `PUBLIC_URL` to that domain, e.g. `https://my-ota.up.railway.app`, and redeploy/restart the service after changing variables.
 
-The admin asset upload endpoint writes publisher uploads into the service's mounted volume. This allows you to run the Expo export on your workstation while keeping the files on Railway's persistent storage. Do not remove the volume or its files while clients may still need old release assets.
+The admin asset upload endpoint writes publisher uploads and failed publish retry records into the service's mounted volume. This allows you to run the Expo export on your workstation while keeping assets and pending release metadata on Railway's persistent storage. Do not remove the volume or its files while clients may still need old release assets.
 
 ## 3. Configure Railway deploy settings
 
@@ -96,6 +96,8 @@ railway run bun run publish:update -- \
 Replace the project path, concrete runtime version, app slug (if needed), and channel with values from the native app build. For a different Expo config slug, pass `--app <slug>`. The publisher defaults the app slug from Expo config and reads `extra.eas.projectId` when configured.
 
 Confirm the publisher environment targets the Railway service/environment with its production `PUBLIC_URL` and `OTA_ADMIN_TOKEN`. `OTA_STORAGE_DIR` is needed by the running Railway API; local publish doesn't write into that local path because it uploads through the server.
+
+If a release-record request fails after the asset uploads, the server keeps its release metadata in the persistent volume. Open `/admin/`, connect with `OTA_ADMIN_TOKEN`, and use **Retry publish** under **Unpublished updates**. The retry reuses the already-uploaded assets. A failed publish from before this retry feature was deployed is not recoverable in the dashboard; rerun the publisher once after deploying the feature to create a retryable record.
 
 ## 6. Verify a published release and asset
 

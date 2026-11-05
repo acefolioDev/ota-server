@@ -8,17 +8,27 @@ type OtaControllerService = Omit<
     | "authorizeAdmin"
     | "getManifest"
     | "listApps"
+    | "listPendingPublishes"
     | "publish"
     | "rollback"
+    | "retryPendingPublish"
     | "serveAsset"
     | "setRollout"
     | "storeAsset"
   >,
-  "publish"
+  "publish" | "retryPendingPublish"
 > & {
   publish(
     input: Parameters<OtaService["publish"]>[0],
   ): Promise<Pick<Awaited<ReturnType<OtaService["publish"]>>, "id" | "createdAt">>;
+  retryPendingPublish(
+    id: string,
+  ): Promise<
+    Pick<
+      NonNullable<Awaited<ReturnType<OtaService["retryPendingPublish"]>>>,
+      "id" | "createdAt"
+    > | null
+  >;
 };
 
 export class OtaController {
@@ -91,6 +101,22 @@ export class OtaController {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
         return this.service.listApps();
+      })
+      .get("/admin/pending-updates", async ({ headers, set }) => {
+        const auth = this.authorize(headers.authorization, set);
+        if (auth) return auth;
+        return this.service.listPendingPublishes();
+      })
+      .post("/admin/pending-updates/:id/retry", async ({ headers, params, set }) => {
+        const auth = this.authorize(headers.authorization, set);
+        if (auth) return auth;
+        const update = await this.service.retryPendingPublish(params.id);
+        if (!update) {
+          set.status = 404;
+          return { error: "Pending update not found" };
+        }
+        set.status = 201;
+        return { id: update.id, createdAt: update.createdAt };
       })
       .post(
         "/admin/updates",

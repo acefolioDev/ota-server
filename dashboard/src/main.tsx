@@ -21,6 +21,15 @@ interface AppRecord {
   updates: Release[];
 }
 
+interface PendingPublish {
+  id: string;
+  createdAt: string;
+  appSlug: string;
+  runtimeVersion: string;
+  platform: string;
+  channel: string;
+}
+
 interface ApiError {
   error?: string;
 }
@@ -30,6 +39,7 @@ const TOKEN_STORAGE_KEY = "ota-admin-token";
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem(TOKEN_STORAGE_KEY) ?? "");
   const [apps, setApps] = useState<AppRecord[]>([]);
+  const [pendingPublishes, setPendingPublishes] = useState<PendingPublish[]>([]);
   const [rollouts, setRollouts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [busyUpdate, setBusyUpdate] = useState<string | null>(null);
@@ -53,6 +63,17 @@ function App() {
       }
       if (!Array.isArray(payload)) throw new Error("The server returned an invalid apps response.");
       setApps(payload);
+      const pendingResponse = await fetch("/api/admin/pending-updates", {
+        headers: { authorization: "Bearer " + token.trim() },
+      });
+      const pendingPayload = (await pendingResponse.json()) as PendingPublish[] | ApiError;
+      if (!pendingResponse.ok) {
+        throw new Error(("error" in pendingPayload && pendingPayload.error) || `Request failed (${pendingResponse.status})`);
+      }
+      if (!Array.isArray(pendingPayload)) {
+        throw new Error("The server returned an invalid pending updates response.");
+      }
+      setPendingPublishes(pendingPayload);
       setRollouts(
         Object.fromEntries(
           payload.flatMap((app) => app.updates.map((release) => [release.id, release.rollout])),
@@ -99,6 +120,14 @@ function App() {
           ),
         })),
       );
+    });
+  }
+
+  async function retryPublish(pending: PendingPublish) {
+    await runUpdateAction(pending.id, async () => {
+      await request(`/api/admin/pending-updates/${pending.id}/retry`, { method: "POST" });
+      setPendingPublishes((current) => current.filter((item) => item.id !== pending.id));
+      await loadApps();
     });
   }
 
@@ -183,6 +212,40 @@ function App() {
       </section>
 
       <section class="apps-section">
+        {pendingPublishes.length > 0 && (
+          <section class="pending-section" aria-label="Pending publishes">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">READY TO RETRY</p>
+                <h2>Unpublished updates</h2>
+              </div>
+            </div>
+            <div class="pending-list">
+              {pendingPublishes.map((pending) => (
+                <article class="pending-card" key={pending.id}>
+                  <div>
+                    <strong>{pending.appSlug} · {pending.runtimeVersion}</strong>
+                    <p class="release-meta">
+                      <span>{pending.platform}</span>
+                      <span>·</span>
+                      <span>{pending.channel}</span>
+                      <span>·</span>
+                      <span>{formatDate(pending.createdAt)}</span>
+                    </p>
+                    <p class="hint">Uploaded assets are reused; retry only records the release.</p>
+                  </div>
+                  <button
+                    class="button button-primary"
+                    onClick={() => void retryPublish(pending)}
+                    disabled={busyUpdate === pending.id}
+                  >
+                    {busyUpdate === pending.id ? "Retrying…" : "Retry publish"}
+                  </button>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
         <div class="section-heading">
           <div>
             <p class="eyebrow">YOUR APPLICATIONS</p>

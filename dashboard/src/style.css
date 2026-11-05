@@ -59,6 +59,11 @@ input:focus { border-color: var(--accent); }
 .stat-card strong { color: #f2f5fb; font-size: 28px; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; margin-bottom: 17px; }
 .section-heading h2 { margin: 0; color: #f3f6fb; font-size: 25px; letter-spacing: -.035em; }
+.pending-section { margin-bottom: 34px; }
+.pending-list { display: grid; gap: 10px; }
+.pending-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid #66502d; border-radius: 12px; padding: 16px 18px; background: #261f18; }
+.pending-card strong { color: #f4ead7; font-size: 13px; }
+.pending-card .hint { margin-bottom: 0; }
 .app-list { display: grid; gap: 15px; }
 .app-card { overflow: hidden; }
 .app-heading { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
@@ -98,6 +103,7 @@ footer { margin-top: 38px; color: #65728a; font-size: 10px; text-align: center; 
   .stat-card { padding: 13px; }
   .stat-card span { font-size: 10px; }
   .stat-card strong { font-size: 23px; }
+  .pending-card { align-items: stretch; flex-direction: column; }
   .release { grid-template-columns: 1fr; }
   .release-actions { grid-column: auto; }
   .release-actions .button { flex: 1; }

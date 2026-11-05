@@ -1,4 +1,4 @@
-import { defineConfig, env, healthRoutes, start } from "@elpod/core";
+import { consoleLogger, defineConfig, env, healthRoutes, start } from "@elpod/core";
 import { app } from "./app";
 
 const config = defineConfig({
@@ -6,6 +6,7 @@ const config = defineConfig({
 });
 const { server } = await start(app, {
   listen: config.port,
+  logger: consoleLogger(),
   configure: (elysia) => healthRoutes(elysia),
 });
 
