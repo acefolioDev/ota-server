@@ -1,10 +1,11 @@
 import { application, type ElpodContract } from "@elpod/core";
 import { app as appFeature } from "@features/app/app.pod";
+import { ota } from "@features/ota/ota.pod";
 import { Clock } from "@infra/clock";
 import { DbProvider } from "@infra/db.provider";
 
 export const app = application({
-  features: [appFeature],
+  features: [appFeature,ota],
   providers: [Clock, DbProvider],
 });
 
