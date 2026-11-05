@@ -36,6 +36,13 @@
                   "kind": "scalar"
                 }
               },
+              "projectId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "slug": {
                 "nullable": false,
                 "type": {
@@ -68,6 +75,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "projectId": {
+                  "column": "project_id"
                 },
                 "slug": {
                   "column": "slug"
@@ -117,7 +127,35 @@
                   }
                 }
               },
+              "extra": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "isActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "launchAsset": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
@@ -128,6 +166,13 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "rollout": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -174,11 +219,26 @@
                 "createdAt": {
                   "column": "created_at"
                 },
+                "extra": {
+                  "column": "extra"
+                },
                 "id": {
                   "column": "id"
                 },
+                "isActive": {
+                  "column": "is_active"
+                },
+                "launchAsset": {
+                  "column": "launch_asset"
+                },
+                "metadata": {
+                  "column": "metadata"
+                },
                 "platform": {
                   "column": "platform"
+                },
+                "rollout": {
+                  "column": "rollout"
                 },
                 "runtimeVersion": {
                   "column": "runtime_version"
@@ -216,6 +276,11 @@
                   "dataType": "pg/text",
                   "nullable": false
                 },
+                "project_id": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "nullable": true
+                },
                 "slug": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
@@ -233,6 +298,11 @@
                 {
                   "columns": [
                     "slug"
+                  ]
+                },
+                {
+                  "columns": [
+                    "project_id"
                   ]
                 }
               ]
@@ -279,14 +349,59 @@
                     "precision": 3
                   }
                 },
+                "extra": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "{}"
+                  },
+                  "nullable": false
+                },
                 "id": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
                   "nullable": false
                 },
+                "is_active": {
+                  "codecId": "pg/bool@1",
+                  "dataType": "pg/bool",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nullable": false
+                },
+                "launch_asset": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "{}"
+                  },
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/text@1",
+                  "dataType": "pg/text",
+                  "default": {
+                    "kind": "literal",
+                    "value": "{}"
+                  },
+                  "nullable": false
+                },
                 "platform": {
                   "codecId": "pg/text@1",
                   "dataType": "pg/text",
+                  "nullable": false
+                },
+                "rollout": {
+                  "codecId": "pg/int4@1",
+                  "dataType": "pg/int4",
+                  "default": {
+                    "kind": "literal",
+                    "value": 100
+                  },
                   "nullable": false
                 },
                 "runtime_version": {
@@ -325,6 +440,18 @@
                   "name": "updates_app_id_idx_1cf06460",
                   "prefix": "updates_app_id_idx",
                   "unique": false
+                },
+                {
+                  "columns": [
+                    "app_id",
+                    "platform",
+                    "runtime_version",
+                    "channel",
+                    "is_active",
+                    "created_at"
+                  ],
+                  "name": "updates_match_idx",
+                  "unique": false
                 }
               ],
               "primaryKey": {
@@ -340,7 +467,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "3e3ac62d1d6d05fe437ab7a350496278b336b9fb979c9912157d91642ff128b2"
+    "storageHash": "2b6714ac7b3f61019b73449333b2727da2ec80e260528bd1c0983ee35daa001b"
   },
   "execution": {
     "executionHash": "cf0539b01da7f98ac0410e371dfaa76f74b56c3191ae97ba85641c4bbec54148",

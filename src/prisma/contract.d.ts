@@ -23,7 +23,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'3e3ac62d1d6d05fe437ab7a350496278b336b9fb979c9912157d91642ff128b2'>;
+  StorageHashBase<'2b6714ac7b3f61019b73449333b2727da2ec80e260528bd1c0983ee35daa001b'>;
 export type ExecutionHash =
   ExecutionHashBase<'cf0539b01da7f98ac0410e371dfaa76f74b56c3191ae97ba85641c4bbec54148'>;
 export type ProfileHash =
@@ -312,6 +312,7 @@ export namespace Models {
   export type public_App = {
     createdAt: FieldOutputTypes['public']['App']['createdAt'];
     id: FieldOutputTypes['public']['App']['id'];
+    projectId: FieldOutputTypes['public']['App']['projectId'];
     slug: FieldOutputTypes['public']['App']['slug'];
     updates: public_Update[];
     readonly [RelationKeys]?: 'updates';
@@ -322,8 +323,13 @@ export namespace Models {
     bundleUrl: FieldOutputTypes['public']['Update']['bundleUrl'];
     channel: FieldOutputTypes['public']['Update']['channel'];
     createdAt: FieldOutputTypes['public']['Update']['createdAt'];
+    extra: FieldOutputTypes['public']['Update']['extra'];
     id: FieldOutputTypes['public']['Update']['id'];
+    isActive: FieldOutputTypes['public']['Update']['isActive'];
+    launchAsset: FieldOutputTypes['public']['Update']['launchAsset'];
+    metadata: FieldOutputTypes['public']['Update']['metadata'];
     platform: FieldOutputTypes['public']['Update']['platform'];
+    rollout: FieldOutputTypes['public']['Update']['rollout'];
     runtimeVersion: FieldOutputTypes['public']['Update']['runtimeVersion'];
     app: public_App;
     readonly [RelationKeys]?: 'app';
@@ -371,6 +377,12 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly project_id: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly many: false;
+                };
                 readonly slug: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
@@ -379,7 +391,10 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['slug'] }];
+              uniques: readonly [
+                { readonly columns: readonly ['slug'] },
+                { readonly columns: readonly ['project_id'] },
+              ];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -425,16 +440,66 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3 };
                   readonly many: false;
                 };
+                readonly extra: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', '{}'>;
+                  };
+                  readonly many: false;
+                };
                 readonly id: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                   readonly many: false;
                 };
+                readonly is_active: {
+                  readonly dataType: 'pg/bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                  readonly many: false;
+                };
+                readonly launch_asset: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', '{}'>;
+                  };
+                  readonly many: false;
+                };
+                readonly metadata: {
+                  readonly dataType: 'pg/text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', '{}'>;
+                  };
+                  readonly many: false;
+                };
                 readonly platform: {
                   readonly dataType: 'pg/text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
+                  readonly many: false;
+                };
+                readonly rollout: {
+                  readonly dataType: 'pg/int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 100>;
+                  };
                   readonly many: false;
                 };
                 readonly runtime_version: {
@@ -451,6 +516,18 @@ type ContractBase = Omit<
                   readonly name: 'updates_app_id_idx_1cf06460';
                   readonly prefix: 'updates_app_id_idx';
                   readonly columns: readonly ['app_id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'updates_match_idx';
+                  readonly columns: readonly [
+                    'app_id',
+                    'platform',
+                    'runtime_version',
+                    'channel',
+                    'is_active',
+                    'created_at',
+                  ];
                   readonly unique: false;
                 },
               ];
@@ -501,6 +578,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly projectId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly slug: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -525,6 +606,7 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly createdAt: { readonly column: 'created_at' };
                 readonly id: { readonly column: 'id' };
+                readonly projectId: { readonly column: 'project_id' };
                 readonly slug: { readonly column: 'slug' };
               };
             };
@@ -555,13 +637,33 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly precision: 3 };
                 };
               };
+              readonly extra: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly isActive: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly launchAsset: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly metadata: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly platform: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly rollout: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
               };
               readonly runtimeVersion: {
                 readonly nullable: false;
@@ -588,8 +690,13 @@ type ContractBase = Omit<
                 readonly bundleUrl: { readonly column: 'bundle_url' };
                 readonly channel: { readonly column: 'channel' };
                 readonly createdAt: { readonly column: 'created_at' };
+                readonly extra: { readonly column: 'extra' };
                 readonly id: { readonly column: 'id' };
+                readonly isActive: { readonly column: 'is_active' };
+                readonly launchAsset: { readonly column: 'launch_asset' };
+                readonly metadata: { readonly column: 'metadata' };
                 readonly platform: { readonly column: 'platform' };
+                readonly rollout: { readonly column: 'rollout' };
                 readonly runtimeVersion: { readonly column: 'runtime_version' };
               };
             };

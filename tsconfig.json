@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "preserve",
     "moduleResolution": "bundler",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": [
       "bun",
       "node"
@@ -17,10 +17,12 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "paths": {
       "@features/*": ["./src/features/*"],
       "@infra/*": ["./src/infra/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "scripts", "dashboard/src", "vite.config.ts"]
 }

@@ -1,0 +1,508 @@
+[
+  {
+    "id": "column.public.apps.project_id",
+    "label": "Add column \"project_id\" to \"apps\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "project_id",
+        "table": "apps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"project_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "apps",
+          "project_id"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"project_id\" on \"apps\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"project_id\"",
+        "sql": "ALTER TABLE \"public\".\"apps\" ADD COLUMN \"project_id\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"project_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "apps",
+          "project_id"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"project_id\" on \"apps\""
+        }
+      },
+      {
+        "description": "verify column \"project_id\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "apps",
+          "project_id",
+          "text"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.updates.extra",
+    "label": "Add column \"extra\" to \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "extra",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"extra\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "extra"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"extra\" on \"updates\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"extra\"",
+        "sql": "ALTER TABLE \"public\".\"updates\" ADD COLUMN \"extra\" text DEFAULT '{}' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"extra\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "extra"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"extra\" on \"updates\""
+        }
+      },
+      {
+        "description": "verify column \"extra\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "extra",
+          "text"
+        ]
+      },
+      {
+        "description": "verify column \"extra\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "extra",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.updates.is_active",
+    "label": "Add column \"is_active\" to \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "is_active",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"is_active\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "is_active"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"is_active\" on \"updates\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"is_active\"",
+        "sql": "ALTER TABLE \"public\".\"updates\" ADD COLUMN \"is_active\" bool DEFAULT true NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"is_active\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "is_active"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"is_active\" on \"updates\""
+        }
+      },
+      {
+        "description": "verify column \"is_active\" has type \"boolean\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "is_active",
+          "boolean"
+        ]
+      },
+      {
+        "description": "verify column \"is_active\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "is_active",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.updates.launch_asset",
+    "label": "Add column \"launch_asset\" to \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "launch_asset",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"launch_asset\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "launch_asset"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"launch_asset\" on \"updates\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"launch_asset\"",
+        "sql": "ALTER TABLE \"public\".\"updates\" ADD COLUMN \"launch_asset\" text DEFAULT '{}' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"launch_asset\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "launch_asset"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"launch_asset\" on \"updates\""
+        }
+      },
+      {
+        "description": "verify column \"launch_asset\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "launch_asset",
+          "text"
+        ]
+      },
+      {
+        "description": "verify column \"launch_asset\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "launch_asset",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.updates.metadata",
+    "label": "Add column \"metadata\" to \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "metadata",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"metadata\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "metadata"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"metadata\" on \"updates\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"metadata\"",
+        "sql": "ALTER TABLE \"public\".\"updates\" ADD COLUMN \"metadata\" text DEFAULT '{}' NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"metadata\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "metadata"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"metadata\" on \"updates\""
+        }
+      },
+      {
+        "description": "verify column \"metadata\" has type \"text\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "metadata",
+          "text"
+        ]
+      },
+      {
+        "description": "verify column \"metadata\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "metadata",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.updates.rollout",
+    "label": "Add column \"rollout\" to \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "rollout",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"rollout\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "rollout"
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "column \"rollout\" on \"updates\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"rollout\"",
+        "sql": "ALTER TABLE \"public\".\"updates\" ADD COLUMN \"rollout\" int4 DEFAULT 100 NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"rollout\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "rollout"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "column \"rollout\" on \"updates\""
+        }
+      },
+      {
+        "description": "verify column \"rollout\" has type \"integer\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_attribute\" AS \"a\" INNER JOIN \"pg_class\" AS \"c\" ON \"c\".\"oid\" = \"a\".\"attrelid\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"a\".\"attname\" = $3 AND (format_type(\"a\".\"atttypid\", \"a\".\"atttypmod\")) = $4 AND NOT (\"a\".\"attisdropped\"))) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "rollout",
+          "integer"
+        ]
+      },
+      {
+        "description": "verify column \"rollout\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "updates",
+          "rollout",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.apps.apps_project_id_key",
+    "label": "Add unique constraint on \"apps\" (project_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "apps_project_id_key",
+        "table": "apps"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"apps_project_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "apps_project_id_key",
+          "public",
+          "\"public\".\"apps\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"apps_project_id_key\" on \"apps\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"apps_project_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"apps\" ADD CONSTRAINT \"apps_project_id_key\" UNIQUE (\"project_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"apps_project_id_key\" exists on (project_id)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "apps_project_id_key",
+          "public",
+          "\"public\".\"apps\"",
+          "u",
+          "[\"project_id\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.updates.updates_match_idx",
+    "label": "Create index \"updates_match_idx\" on \"updates\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "updates_match_idx",
+        "table": "updates"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"updates_match_idx\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"updates_match_idx\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"updates_match_idx\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"updates_match_idx\"",
+        "sql": "CREATE INDEX \"updates_match_idx\" ON \"public\".\"updates\" (\"app_id\", \"platform\", \"runtime_version\", \"channel\", \"is_active\", \"created_at\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"updates_match_idx\" exists on \"updates\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"updates_match_idx\"",
+          "i",
+          "I",
+          "\"public\".\"updates\"",
+          "btree",
+          "[\"app_id\",\"platform\",\"runtime_version\",\"channel\",\"is_active\",\"created_at\"]"
+        ]
+      }
+    ]
+  }
+]

@@ -3,6 +3,7 @@
 model App {
   id        String   @id @onCreate(uuid())
   slug      String   @unique
+  projectId String?  @unique @map("project_id")
   createdAt DateTime @default(now()) @map("created_at")
   updates   Update[]
 
@@ -13,13 +14,19 @@ model Update {
   id             String   @id @onCreate(uuid())
   appId          String   @map("app_id")
   runtimeVersion String   @map("runtime_version")
-  platform       String   // "ios" | "android"
+  platform       String
   channel        String   @default("production")
   bundleUrl      String   @map("bundle_url")
-  assets         String   @default("[]") // JSON stringified array of assets
+  launchAsset    String   @default("{}") @map("launch_asset")
+  assets         String   @default("[]")
+  metadata       String   @default("{}")
+  extra          String   @default("{}")
+  rollout        Int      @default(100)
+  isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at")
 
   app App @relation(fields: [appId], references: [id], onDelete: Cascade)
 
+  @@index([appId, platform, runtimeVersion, channel, isActive, createdAt], map: "updates_match_idx")
   @@map("updates")
 }

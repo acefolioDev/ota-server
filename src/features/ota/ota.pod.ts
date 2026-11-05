@@ -4,6 +4,7 @@ import { OtaService } from "./ota.service";
 
 export const ota = pod({
   name: "ota",
+  prefix: "/api",
   controller: OtaController,
   providers: [OtaService],
 });
