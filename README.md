@@ -2,7 +2,7 @@
 
 This service runs on Bun with Elpod/Elysia, PostgreSQL through Prisma 8, and a Preact/Vite admin dashboard.
 
-For step-by-step Expo React Native app configuration, publishing, and testing, see the [client integration guide](./docs/README.md).
+For Expo app configuration, publishing, and testing, see the [Expo client integration guide](./docs/README.md). For bare React Native CLI native setup, see the [React Native CLI OTA guide](./docs/react-native-cli-ota.md).
 For Railway deployment, PostgreSQL migrations, persistent asset storage, and remote publishing, see the [Railway deployment guide](./docs/railway-deployment.md).
 
 ## Configure and run

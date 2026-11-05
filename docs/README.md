@@ -2,6 +2,8 @@
 
 This guide covers connecting an Expo app that uses `expo-updates` to this server, publishing and checking an update, and testing rollback. These instructions apply to Expo apps using Expo's Updates protocol; they do not enable OTA updates for arbitrary native React Native apps without `expo-updates`.
 
+For React Native CLI apps that own their native `ios/` and `android/` projects, see the dedicated [React Native CLI OTA setup guide](./react-native-cli-ota.md), which covers Expo modules installation and native configuration.
+
 ## What you need
 
 - A running OTA server with its database migration applied.
