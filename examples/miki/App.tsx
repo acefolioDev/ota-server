@@ -243,7 +243,8 @@ function App() {
             </Pressable>
           </View>
 
-          <Text style={styles.subheading}>Little thoughts, kept close.</Text>
+          {/* <Text style={styles.subheading}>Little thoughts, kept close.</Text> */}
+          <Text style={styles.subheading}>OTA test: update received.</Text>
 
           {storageError ? (
             <View accessibilityRole="alert" style={styles.errorBanner}>
