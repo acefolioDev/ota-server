@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model App {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updates   Update[]
+
+  @@map("apps")
+}
+
+model Update {
+  id             String   @id @default(uuid())
+  appId          String   @map("app_id")
+  runtimeVersion String   @map("runtime_version")
+  platform       String   // "ios" | "android"
+  channel        String   @default("production")
+  bundleUrl      String   @map("bundle_url")
+  assets         String   @default("[]") // JSON stringified array of assets
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@map("updates")
+}
