@@ -2,6 +2,8 @@
 
 Miki is a local-first notes app scaffolded with the React Native Community CLI. It stores notes on-device using AsyncStorage and uses Expo `expo-updates` to check this repository's self-hosted Expo Updates v1 server.
 
+The app has three JavaScript screens—Notes, Pinned, and Settings—with a separate note editor. `App.tsx` is only the entry point; screens, reusable components, note storage, and the OTA update hook live under `src/`. Each screen component is kept under 250 lines. This UI structure uses the dependencies already in the project and does not require adding a native API or navigation package.
+
 ## Requirements
 
 - Node.js 22.11 or newer (required by the generated React Native 0.88.1 template).
