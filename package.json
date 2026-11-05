@@ -8,11 +8,15 @@
     "start": "elpod start",
     "elpod": "elpod",
     "postinstall": "prisma skills sync || exit 0",
-    "contract:emit": "prisma contract emit"
+    "contract:emit": "prisma contract emit",
+    "db:init": "prisma db init",
+    "db:update": "prisma db update",
+    "db:verify": "prisma db verify",
+    "db:status": "prisma migration status",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@elpod/core": "^0.1.1",
-    "@prisma/client": "^7.10.1",
     "@prisma/orm-postgres": "^8.0.0-rc.22",
     "dotenv": "^18.0.9",
     "elysia": "^1.4.30"

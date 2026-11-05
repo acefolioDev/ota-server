@@ -1,106 +1,33 @@
-# Welcome to Prisma ORM!
+# Prisma 8 Setup
 
-Prisma ORM lets you query your database in simple, easy-to-read TypeScript. Define what your data looks like, and Prisma ORM gives you a fully typed client — with autocomplete for every table, column, and relation.
+The app's data contract is [`src/prisma/contract.prisma`](src/prisma/contract.prisma). It defines the PostgreSQL `App` and `Update` models and is the source of truth for the generated contract types and runtime.
 
-This project is set up for PostgreSQL. Prisma ORM also supports other databases.
+## Configure PostgreSQL
 
-## Requirements
+Use PostgreSQL 15 or newer. Copy `.env.example` to `.env` and set `DATABASE_URL` to the connection string for your database. The Prisma CLI reads it through `prisma.config.ts`, and the runtime loads it through `src/prisma/db.ts`.
 
-- **PostgreSQL 15 or newer.** Older servers are not supported. Run `SELECT version()` against your server to verify.
-- The CLI never connects to your database without explicit consent. Pass `--probe-db` to `bun prisma orm init` if you want `init` to verify the server version itself.
-
-## Your data contract
-
-Your data contract is the heart of your application. It lives at [`src/prisma/contract.prisma`](src/prisma/contract.prisma) and describes your models:
-
-```prisma
-model User {
-  id       Int     @id @default(autoincrement())
-  email    String  @unique
-  username String?
-  name     String?
-}
-```
-
-Every model you define in your contract can be queried from your app. Your editor will autocomplete the query methods and show you what type each model field is:
-
-```typescript
-import { db } from './src/prisma/db';
-
-const user = await db.orm.public.User
-  .where({ email: 'alice@example.com' })
-  .first();
-
-// Your editor will show the type of user as
-// { id: number; email: string; username: string | null; name: string | null; createdAt: Date; posts: Post[] } | null
-```
-
-Your contract has two companion files in the same directory:
-
-- **`contract.json`** — this tells your application what models exist, just like `package-lock.json` tells your package manager what dependencies your project has
-- **`contract.d.ts`** — this powers autocomplete and type checking in your editor
-
-Commit both files to git. When you change your contract, run `bun prisma contract emit` to update them.
-
-If you use a framework like Next.js or Vite, the Prisma ORM plugin will do this for you automatically.
-
-## Configuration
-
-[`prisma.config.ts`](prisma.config.ts) tells the CLI where your contract lives and how to connect to your database. It loads environment variables from `.env` automatically:
-
-```typescript
-import 'dotenv/config';
-import { definePrismaConfig } from '@prisma/cli-engine';
-import { defineConfig as ormConfig } from '@prisma/orm-postgres/config';
-
-export default definePrismaConfig({
-  orm: ormConfig({
-    contract: './src/prisma/contract.prisma',
-    db: {
-      connection: process.env['DATABASE_URL']!,
-    },
-  }),
-});
-```
-
-Notice the `DATABASE_URL` above? It's defined in your [`.env`](./.env) file:
-
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/mydb"
-```
-
-You can customize how your environment variables are loaded by changing or removing the `import 'dotenv/config'` line.
-
-## Quick reference
-
-### Commands
+## Database workflow
 
 ```bash
-bun prisma contract emit       # Update contract.json and contract.d.ts
-bun prisma db init             # Create tables in the database
-bun prisma migration status    # Show migration status
+bun run contract:emit # Regenerate contract.json and contract.d.ts after editing the contract
+bun run db:init        # Apply the contract to a new database
+bun run db:update      # Update a development database to match the contract
+bun run db:verify      # Check that the database matches the contract
+bun run db:status      # Show migration status
+bun run typecheck      # Type-check the application
 ```
 
-### Files
+`db:init` and `db:update` change the target database. Review `DATABASE_URL` before running them. Use migration planning and `db migrate` for schema changes that need a reviewed migration history.
 
-| File | Purpose |
-|---|---|
-| [`src/prisma/contract.prisma`](src/prisma/contract.prisma) | Your data contract — define your models here |
-| [`prisma.config.ts`](prisma.config.ts) | CLI configuration |
-| [`src/prisma/db.ts`](src/prisma/db.ts) | Database client — `import { db } from './src/prisma/db'` |
-| `src/prisma/contract.json` | Compiled contract (generated) |
-| `src/prisma/contract.d.ts` | Contract types (generated) |
+## Runtime
 
-### Workflow
+Import the shared typed client from `src/prisma/db.ts`:
 
-1. Edit [`src/prisma/contract.prisma`](src/prisma/contract.prisma) to add or change models.
-2. Run `bun prisma contract emit` to regenerate the contract.
-3. Query your models — your IDE will autocomplete everything.
+```typescript
+import { db } from './prisma/db';
 
-## Monorepo notes (pnpm workspaces)
+const app = await db.orm.public.App.create({ slug: 'my-app' });
+const updates = await db.orm.public.Update.where({ appId: app.id }).all();
+```
 
-If this project lives inside a pnpm workspace, a few things are worth knowing:
-
-- **Catalogs.** When the workspace's `pnpm-workspace.yaml` defines a `catalogs` entry for `prisma` or `@prisma/orm-postgres`, pnpm uses the catalog version everywhere — `init` does too. If you wanted the published `latest` instead, update or remove the catalog entry, then re-run `pnpm install`.
-- **`pnpm dlx`.** `pnpm dlx prisma@latest orm init …` works in any directory. Inside a workspace, pnpm still resolves dependencies through the workspace's catalog/overrides rather than the registry; expect the installed Prisma ORM packages to reflect the workspace's catalog rather than `latest`.
-- **`pnpm` → `npm` fallback.** If `pnpm` ever fails to install Prisma ORM with a `workspace:*` or `catalog:` resolution error (a leak in a published artefact), `init` falls back to `npm install` and surfaces a warning. Once the offending package republishes a clean version you can switch back with `pnpm install`.
+`contract.json` and `contract.d.ts` are generated artifacts; edit `contract.prisma` and run `bun run contract:emit` instead of editing them directly.

@@ -1,14 +1,7 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+// use prisma-8
 
 model App {
-  id        String   @id @default(uuid())
+  id        String   @id @onCreate(uuid())
   slug      String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updates   Update[]
@@ -17,7 +10,7 @@ model App {
 }
 
 model Update {
-  id             String   @id @default(uuid())
+  id             String   @id @onCreate(uuid())
   appId          String   @map("app_id")
   runtimeVersion String   @map("runtime_version")
   platform       String   // "ios" | "android"
