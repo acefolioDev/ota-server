@@ -9,7 +9,7 @@ This guide covers connecting an Expo app that uses `expo-updates` to this server
 - Expo CLI in the app project (`npx expo ...`) and a native iOS or Android build with `expo-updates` installed.
 - A known, concrete runtime version for the native build and the OTA bundle. An update with a different runtime version will not be served to that build.
 
-The server's manifest route is `https://ota.example.com/api/manifest`. Its publishing CLI creates content-addressed asset URLs using `PUBLIC_URL` and stores files under `OTA_STORAGE_DIR/assets`. Set the public URL and persistent asset storage on the server before publishing. Do not remove published assets while clients could still request their release.
+The server's manifest route is `https://ota.example.com/api/manifest`. Its publishing CLI creates content-addressed asset URLs using `PUBLIC_URL` and uploads files to the server, which stores them under `OTA_STORAGE_DIR/assets`. Set the public URL, persistent asset storage, and `OTA_ADMIN_TOKEN` on the server before publishing. Do not remove published assets while clients could still request their release.
 
 ## 1. Install and configure Expo Updates
 
@@ -85,7 +85,7 @@ bun run publish:update -- \
 
 The command exports the requested platform, reads Expo's export metadata, hashes and stores the launch bundle and referenced assets, then inserts an active release. It uses the Expo config slug unless `--app <slug>` is supplied. When `extra.eas.projectId` exists in the Expo config, it is linked automatically; `--project-id <uuid>` can override it. The client can use the `?app=<slug>` URL above regardless of whether a project ID is configured.
 
-The server CLI needs the same database configuration and `OTA_STORAGE_DIR` as the running server. `PUBLIC_URL` must be the externally reachable asset origin, not `localhost`, for devices outside the server host. Never expose `OTA_ADMIN_TOKEN` in the React Native app; it is only for the management dashboard/API.
+The publisher needs the Railway database URL, the server's `PUBLIC_URL`, and `OTA_ADMIN_TOKEN`; it uploads assets to the server API, which writes to its own persistent `OTA_STORAGE_DIR`. `PUBLIC_URL` must be the externally reachable asset origin, not `localhost`, for devices outside the server host. Never expose `OTA_ADMIN_TOKEN` in the React Native app; it is only for management and publishing.
 
 ## 3. Check that the server has a matching release
 

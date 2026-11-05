@@ -1,4 +1,5 @@
-import { randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { DbProvider } from "@infra/db.provider";
 import type { ExpoAsset, ExpoManifest } from "./ota.types";
@@ -141,6 +142,28 @@ export class OtaService {
     return updated ?? null;
   }
 
+  async storeAsset(filename: string, contents: Uint8Array): Promise<boolean> {
+    const match = /^([A-Za-z0-9_-]{43})\.[a-z0-9]{1,10}$/.exec(filename);
+    if (!match) return false;
+
+    const hash = createHash("sha256").update(contents).digest("base64url");
+    if (hash !== match[1]) return false;
+
+    const storageRoot = resolve(process.env["OTA_STORAGE_DIR"] ?? "storage");
+    const directory = resolve(storageRoot, "assets");
+    const destination = resolve(directory, filename);
+    await mkdir(directory, { recursive: true });
+    try {
+      await writeFile(destination, contents, { flag: "wx" });
+      return true;
+    } catch (error) {
+      if (!isNodeError(error, "EEXIST")) throw error;
+
+      const existing = await readFile(destination);
+      return createHash("sha256").update(existing).digest("base64url") === hash;
+    }
+  }
+
   async publish(input: PublishUpdateInput) {
     const projectId = input.projectId ?? null;
     const app = await this.database.prisma.orm.public.App
@@ -230,6 +253,10 @@ export class OtaService {
       .all();
     return apps.length === 1 ? apps[0] ?? null : null;
   }
+}
+
+function isNodeError(error: unknown, code: string): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error && error.code === code;
 }
 
 function contentTypeFor(filename: string): string {

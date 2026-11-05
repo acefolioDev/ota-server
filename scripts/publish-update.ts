@@ -1,12 +1,6 @@
 import { $ } from "bun";
 import { createHash } from "node:crypto";
-import {
-  copyFile,
-  mkdir,
-  readdir,
-  readFile,
-  stat,
-} from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { extname, relative, resolve, sep } from "node:path";
 import { DbProvider } from "../src/infra/db.provider";
 import { db } from "../src/prisma/db";
@@ -164,27 +158,32 @@ function contentTypeFor(path: string): string {
   return contentTypes[extension] ?? "application/octet-stream";
 }
 
-async function storeFile(source: string, storageDirectory: string, publicOrigin: string): Promise<PublishedFile> {
+async function storeFile(
+  source: string,
+  publicOrigin: string,
+  adminToken: string,
+): Promise<PublishedFile> {
   const bytes = await readFile(source);
+  if (bytes.byteLength > 100 * 1024 * 1024) {
+    throw new Error(`Asset exceeds the 100 MiB upload limit: ${source}`);
+  }
   const hash = createHash("sha256").update(bytes).digest("base64url");
   const rawExtension = extname(source).toLowerCase();
   const extension = /^\.[a-z0-9]{1,10}$/.test(rawExtension) ? rawExtension : ".bin";
   const filename = `${hash}${extension}`;
-  const destination = resolve(storageDirectory, filename);
-  await mkdir(storageDirectory, { recursive: true });
-
-  try {
-    const currentBytes = await readFile(destination);
-    const currentHash = createHash("sha256").update(currentBytes).digest("base64url");
-    if (currentHash !== hash) {
-      throw new Error(`Existing stored asset does not match its content hash: ${destination}`);
-    }
-  } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      await copyFile(source, destination);
-    } else {
-      throw error;
-    }
+  const response = await fetch(`${publicOrigin}/api/admin/assets/${filename}`, {
+    method: "PUT",
+    headers: {
+      authorization: `Bearer ${adminToken}`,
+      "content-type": contentTypeFor(source),
+    },
+    body: bytes,
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Could not upload asset ${filename} (HTTP ${response.status})${body ? `: ${body}` : ""}`,
+    );
   }
 
   const url = `${publicOrigin}/api/assets/${filename}`;
@@ -206,6 +205,8 @@ function stringValue(value: unknown): string | undefined {
 async function main(): Promise<void> {
   const options = parseOptions(process.argv.slice(2));
   if (!options) return;
+  const adminToken = process.env["OTA_ADMIN_TOKEN"];
+  if (!adminToken) throw new Error("OTA_ADMIN_TOKEN is required to upload assets to the OTA server");
   const projectStat = await stat(options.projectDir);
   if (!projectStat.isDirectory()) throw new Error(`Expo project directory is not a directory: ${options.projectDir}`);
 
@@ -266,17 +267,12 @@ async function main(): Promise<void> {
     throw new Error(`Invalid PUBLIC_URL: ${publicUrl}`, { cause: error });
   }
 
-  const storageDirectory = resolve(
-    process.cwd(),
-    process.env["OTA_STORAGE_DIR"] ?? "storage",
-    "assets",
-  );
-  const launch = await storeFile(bundlePath, storageDirectory, publicOrigin);
+  const launch = await storeFile(bundlePath, publicOrigin, adminToken);
   const launchAsset = { ...launch.asset };
   delete launchAsset.fileExtension;
   const assets: ExpoAsset[] = [];
   for (const assetPath of resolvedAssets) {
-    const stored = await storeFile(assetPath, storageDirectory, publicOrigin);
+    const stored = await storeFile(assetPath, publicOrigin, adminToken);
     assets.push(stored.asset);
   }
 

@@ -73,6 +73,30 @@ export class OtaController {
         if (auth) return auth;
         return this.service.listApps();
       })
+      .put("/admin/assets/:filename", async ({ headers, params, request, set }) => {
+        const auth = this.authorize(headers.authorization, set);
+        if (auth) return auth;
+
+        const contentLength = Number(headers["content-length"]);
+        if (Number.isFinite(contentLength) && contentLength > MAX_ASSET_UPLOAD_BYTES) {
+          set.status = 413;
+          return { error: "Asset exceeds the 100 MiB upload limit" };
+        }
+
+        const contents = await readRequestBody(request, MAX_ASSET_UPLOAD_BYTES);
+        if (!contents) {
+          set.status = 413;
+          return { error: "Asset exceeds the 100 MiB upload limit" };
+        }
+
+        const stored = await this.service.storeAsset(params.filename, contents);
+        if (!stored) {
+          set.status = 400;
+          return { error: "Asset filename must contain its matching base64url SHA-256 hash" };
+        }
+        set.status = 201;
+        return { filename: params.filename, stored: true };
+      })
       .patch(
         "/admin/updates/:id/rollout",
         async ({ body, headers, params, set }) => {
@@ -117,4 +141,35 @@ export class OtaController {
           : "A valid bearer token is required",
     };
   }
+}
+
+const MAX_ASSET_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+async function readRequestBody(
+  request: Request,
+  maxBytes: number,
+): Promise<Uint8Array | null> {
+  const reader = request.body?.getReader();
+  if (!reader) return new Uint8Array();
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  const contents = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    contents.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return contents;
 }

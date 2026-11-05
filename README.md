@@ -3,6 +3,7 @@
 This service runs on Bun with Elpod/Elysia, PostgreSQL through Prisma 8, and a Preact/Vite admin dashboard.
 
 For step-by-step Expo React Native app configuration, publishing, and testing, see the [client integration guide](./docs/README.md).
+For Railway deployment, PostgreSQL migrations, persistent asset storage, and remote publishing, see the [Railway deployment guide](./docs/railway-deployment.md).
 
 ## Configure and run
 
@@ -43,7 +44,7 @@ bun run publish:update -- \
 
 `--app` defaults to the resolved Expo config `slug`; `--project-id` defaults to `extra.eas.projectId`; `--runtime-version` defaults to a concrete string `runtimeVersion`. Runtime-version policies must be resolved and passed explicitly. Run the command separately for iOS and Android. The script runs `npx expo export --platform <platform> --output-dir dist`, reads the platform export metadata, hashes bundle/assets with base64url SHA-256, stores immutable files, and publishes the manifest record.
 
-Use the same `PUBLIC_URL` and `OTA_STORAGE_DIR` for the publish command and the running API. Asset URLs are public and immutable; retain stored files while any installed client may still request a release.
+Set `PUBLIC_URL` to the running server's reachable origin and set `OTA_ADMIN_TOKEN` for authenticated asset uploads. The publisher uploads hashed assets to the server's `/api/admin/assets/:filename` endpoint before writing the release to PostgreSQL. `OTA_STORAGE_DIR` is used by the API server for persistent asset storage; retain stored files while any installed client may still request a release.
 
 ## Configure an Expo client
 
