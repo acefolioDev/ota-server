@@ -1,0 +1,28 @@
+{
+  "name": "Miki",
+  "displayName": "Miki",
+  "expo": {
+    "name": "Miki",
+    "slug": "miki",
+    "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://ota-server.up.railway.app/api/manifest?app=miki",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.miki"
+    },
+    "android": {
+      "package": "com.miki"
+    },
+    "plugins": [
+      "expo-updates"
+    ]
+  }
+}
