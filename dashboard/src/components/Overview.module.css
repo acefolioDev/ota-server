@@ -1,0 +1,25 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 28px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: var(--panel);
+}
+
+.card span { color: var(--muted); font-size: 12px; font-weight: 600; }
+.card strong { font-size: 28px; font-weight: 640; letter-spacing: -0.04em; }
+
+@media (max-width: 640px) {
+  .stats { gap: 8px; }
+  .card { padding: 12px; }
+  .card strong { font-size: 22px; }
+}

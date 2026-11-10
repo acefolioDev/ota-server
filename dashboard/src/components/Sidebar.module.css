@@ -1,0 +1,76 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 100vh;
+  padding: 22px 18px;
+  border-right: 1px solid var(--line);
+  background: var(--sidebar);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.brandText { display: flex; flex-direction: column; gap: 2px; }
+.product { font-size: 14px; font-weight: 650; letter-spacing: -0.02em; }
+.productSub { color: var(--faint); font-size: 12px; }
+
+.nav { display: flex; flex-direction: column; gap: 4px; }
+
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: #ffffff0d;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.note {
+  margin: -12px 10px 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.badge {
+  min-width: 20px;
+  border-radius: 99px;
+  padding: 2px 6px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  font-size: 11px;
+  text-align: center;
+}
+
+.session { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.session h2 { margin: 0; font-size: 13px; font-weight: 650; }
+.label { color: var(--muted); font-size: 12px; font-weight: 600; }
+.hint { margin: 0; color: var(--faint); font-size: 12px; line-height: 1.45; }
+
+@media (max-width: 860px) {
+  .sidebar { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .session { margin-top: 0; }
+}
