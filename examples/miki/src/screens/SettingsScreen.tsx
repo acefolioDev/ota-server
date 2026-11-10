@@ -33,7 +33,7 @@ export function SettingsScreen({ noteCount, storageError }: Props) {
         </Text>
         <Pressable
           accessibilityRole="button"
-          onPress={checkForUpdate}
+          onPress={() => checkForUpdate(false)}
           disabled={isCheckingUpdates}
           style={({ pressed }) => [
             styles.updateButton,

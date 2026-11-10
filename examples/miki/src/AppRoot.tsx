@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { BottomNavigation } from './components/BottomNavigation';
+import { MikiAlertHost } from './components/MikiAlert';
 import { NoteEditorModal } from './components/NoteEditorModal';
 import { useNotes } from './hooks/useNotes';
 import type { AppScreen, Note } from './types/note';
@@ -67,6 +68,7 @@ export default function AppRoot() {
           onClose={() => setEditorVisible(false)}
           onSave={handleSave}
         />
+        <MikiAlertHost />
       </SafeAreaView>
     </SafeAreaProvider>
   );

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { showMikiAlert } from '../components/MikiAlert';
 import { NOTE_COLORS, NOTES_STORAGE_KEY } from '../constants/notes';
 import type { Note } from '../types/note';
 import { parseNotes } from '../utils/notes';
@@ -61,7 +61,11 @@ export function useNotes() {
       const title = titleValue.trim();
       const body = bodyValue.trim();
       if (!title && !body) {
-        Alert.alert('Empty note', 'Add a title or a few words before saving.');
+        showMikiAlert({
+          title: 'A blank page',
+          message: 'Add a title or a few words before Miki tucks this one away.',
+          tone: 'note',
+        });
         return false;
       }
 
@@ -99,14 +103,19 @@ export function useNotes() {
 
   const deleteNote = useCallback(
     (note: Note) => {
-      Alert.alert('Delete note?', `“${note.title}” will be removed from this device.`, [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => commitNotes(notesRef.current.filter(item => item.id !== note.id)),
-        },
-      ]);
+      showMikiAlert({
+        title: 'Let this one go?',
+        message: `“${note.title}” will leave this device.`,
+        tone: 'danger',
+        buttons: [
+          { text: 'Keep it', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => commitNotes(notesRef.current.filter(item => item.id !== note.id)),
+          },
+        ],
+      });
     },
     [commitNotes],
   );
