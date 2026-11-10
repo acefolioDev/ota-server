@@ -34,9 +34,7 @@ export function retryPendingPublish(token: string, pendingId: string) {
 async function getJson<T>(url: string, token: string): Promise<T> {
   const response = await fetch(url, { headers: authHeaders(token) });
   const payload = (await response.json()) as T & ApiError;
-  if (!response.ok) {
-    throw new Error(payload.error || `Request failed (${response.status})`);
-  }
+  if (!response.ok) throw new Error(errorMessage(payload, response.status));
   return payload;
 }
 
@@ -46,11 +44,18 @@ async function sendJson(url: string, token: string, init: RequestInit) {
     headers: { ...authHeaders(token), ...JSON_HEADERS, ...init.headers },
   });
   const payload = (await response.json()) as ApiError;
-  if (!response.ok) {
-    throw new Error(payload.error || `Request failed (${response.status})`);
-  }
+  if (!response.ok) throw new Error(errorMessage(payload, response.status));
 }
 
 function authHeaders(token: string): HeadersInit {
   return { authorization: `Bearer ${token.trim()}` };
+}
+
+function errorMessage(payload: ApiError, status: number): string {
+  const error = payload.error;
+  if (typeof error === "string" && error) return error;
+  if (typeof error === "object" && error !== null && typeof error.message === "string" && error.message) {
+    return error.message;
+  }
+  return `Request failed (${status})`;
 }

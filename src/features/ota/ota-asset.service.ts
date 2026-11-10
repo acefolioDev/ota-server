@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { APP_CONFIG, type AppConfig } from "@infra/config";
 import { isNodeError } from "./ota.utils";
 
 const MAX_ASSET_UPLOAD_BYTES = 100 * 1024 * 1024;
@@ -8,6 +9,10 @@ const MAX_ASSET_UPLOAD_BYTES = 100 * 1024 * 1024;
 export type StoredAsset = "stored" | "too-large" | "bad-filename";
 
 export class OtaAssetService {
+  static readonly needs = [APP_CONFIG] as const;
+
+  constructor(private readonly config: AppConfig) {}
+
   async storeAsset(filename: string, request: Request): Promise<StoredAsset> {
     const contentLength = Number(request.headers.get("content-length"));
     if (Number.isFinite(contentLength) && contentLength > MAX_ASSET_UPLOAD_BYTES) {
@@ -23,7 +28,7 @@ export class OtaAssetService {
     const hash = createHash("sha256").update(contents).digest("base64url");
     if (hash !== match[1]) return "bad-filename";
 
-    const directory = resolve(storageRoot(), "assets");
+    const directory = resolve(this.storageRoot(), "assets");
     const destination = resolve(directory, filename);
     await mkdir(directory, { recursive: true });
     try {
@@ -43,7 +48,7 @@ export class OtaAssetService {
       return new Response("Not found", { status: 404 });
     }
 
-    const file = Bun.file(resolve(storageRoot(), "assets", filename));
+    const file = Bun.file(resolve(this.storageRoot(), "assets", filename));
     if (!(await file.exists())) return new Response("Not found", { status: 404 });
 
     return new Response(file, {
@@ -54,10 +59,10 @@ export class OtaAssetService {
       },
     });
   }
-}
 
-function storageRoot(): string {
-  return resolve(process.env["OTA_STORAGE_DIR"] ?? "storage");
+  private storageRoot(): string {
+    return resolve(this.config.storageDir);
+  }
 }
 
 async function readRequestBody(request: Request, maxBytes: number): Promise<Uint8Array | null> {

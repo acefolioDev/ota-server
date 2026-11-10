@@ -27,5 +27,5 @@ export interface PendingPublish {
 }
 
 export interface ApiError {
-  error?: string;
+  error?: string | { message?: string };
 }

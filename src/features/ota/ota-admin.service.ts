@@ -1,10 +1,14 @@
 import { timingSafeEqual } from "node:crypto";
+import { APP_CONFIG, type AppConfig } from "@infra/config";
 import { OtaRepo } from "./ota.repo";
 
 export class OtaAdminService {
-  static readonly needs = [OtaRepo] as const;
+  static readonly needs = [OtaRepo, APP_CONFIG] as const;
 
-  constructor(private readonly repo: OtaRepo) {}
+  constructor(
+    private readonly repo: OtaRepo,
+    private readonly config: AppConfig,
+  ) {}
 
   async listApps() {
     const apps = await this.repo.listApps();
@@ -27,9 +31,8 @@ export class OtaAdminService {
     return this.repo.rollback(updateId);
   }
 
-  authorizeAdmin(authorization: string | undefined): "authorized" | "unauthorized" | "unconfigured" {
-    const expected = process.env["OTA_ADMIN_TOKEN"];
-    if (!expected) return "unconfigured";
+  authorizeAdmin(authorization: string | undefined): "authorized" | "unauthorized" {
+    const expected = this.config.adminToken;
     if (!authorization?.startsWith("Bearer ")) return "unauthorized";
 
     const actual = Buffer.from(authorization.slice("Bearer ".length));

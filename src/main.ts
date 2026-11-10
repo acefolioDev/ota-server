@@ -1,9 +1,6 @@
-import { consoleLogger, defineConfig, env, healthRoutes, start } from "@elpod/core";
-import { app } from "./app";
+import { consoleLogger, healthRoutes, start } from "@elpod/core";
+import { app, config } from "./app";
 
-const config = defineConfig({
-  port: env.number("PORT", { default: 3000, min: 1, max: 65_535 }),
-});
 const { server } = await start(app, {
   listen: config.port,
   logger: consoleLogger(),

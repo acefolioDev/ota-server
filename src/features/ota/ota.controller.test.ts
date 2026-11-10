@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { ElpodError, serializeError } from "@elpod/core";
 import { Elysia } from "elysia";
 import type { ExpoAsset, PublishUpdateInput } from "./ota.types";
 import { OtaController } from "./ota.controller";
@@ -45,7 +46,13 @@ function createTestApp(
     rollback: async () => null,
     setRollout: async () => null,
   };
-  return new OtaController(manifest, publishing, assets, admin).routes(new Elysia());
+  const app = new OtaController(manifest, publishing, assets, admin).routes(new Elysia());
+  return app.onError(({ error, set }) => {
+    if (!(error instanceof ElpodError)) return;
+    const serialized = serializeError(error);
+    set.status = serialized.status;
+    return serialized.payload;
+  });
 }
 
 const publishBody = {

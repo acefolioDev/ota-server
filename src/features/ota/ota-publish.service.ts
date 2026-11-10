@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, readdir, rename, unlink, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
+import { APP_CONFIG, type AppConfig } from "@infra/config";
 import type { PublishUpdateInput } from "./ota.types";
 import { isExpoAsset, isNodeError } from "./ota.utils";
 import { OtaRepo } from "./ota.repo";
@@ -17,9 +18,12 @@ interface PublishedUpdate {
 }
 
 export class OtaPublishService {
-  static readonly needs = [OtaRepo] as const;
+  static readonly needs = [OtaRepo, APP_CONFIG] as const;
 
-  constructor(private readonly repo: OtaRepo) {}
+  constructor(
+    private readonly repo: OtaRepo,
+    private readonly config: AppConfig,
+  ) {}
 
   async publish(input: PublishUpdateInput): Promise<PublishedUpdate> {
     const pending: PendingPublish = {
@@ -34,7 +38,7 @@ export class OtaPublishService {
   }
 
   async listPendingPublishes() {
-    const directory = pendingPublishesDirectory();
+    const directory = this.pendingDirectory();
     let filenames: string[];
     try {
       filenames = await readdir(directory);
@@ -114,7 +118,7 @@ export class OtaPublishService {
   }
 
   private async writePendingPublish(pending: PendingPublish) {
-    const directory = pendingPublishesDirectory();
+    const directory = this.pendingDirectory();
     await mkdir(directory, { recursive: true });
     const temporary = resolve(directory, `${pending.id}.tmp`);
     const destination = resolve(directory, `${pending.id}.json`);
@@ -123,7 +127,7 @@ export class OtaPublishService {
   }
 
   private async readPendingPublish(id: string): Promise<PendingPublish> {
-    const contents = await readFile(resolve(pendingPublishesDirectory(), `${id}.json`), "utf8");
+    const contents = await readFile(resolve(this.pendingDirectory(), `${id}.json`), "utf8");
     const pending = JSON.parse(contents) as PendingPublish;
     if (
       pending.id !== id ||
@@ -137,15 +141,15 @@ export class OtaPublishService {
 
   private async removePendingPublish(id: string) {
     try {
-      await unlink(resolve(pendingPublishesDirectory(), `${id}.json`));
+      await unlink(resolve(this.pendingDirectory(), `${id}.json`));
     } catch (error) {
       if (!isNodeError(error, "ENOENT")) throw error;
     }
   }
-}
 
-function pendingPublishesDirectory(): string {
-  return resolve(process.env["OTA_STORAGE_DIR"] ?? "storage", "pending-publishes");
+  private pendingDirectory(): string {
+    return resolve(this.config.storageDir, "pending-publishes");
+  }
 }
 
 function isPublishInput(value: unknown): value is PublishUpdateInput {
