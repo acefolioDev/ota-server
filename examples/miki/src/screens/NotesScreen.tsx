@@ -31,7 +31,6 @@ export function NotesScreen({
   return (
     <View style={styles.screen}>
       <ScreenHeader
-        showMark
         eyebrow="YOUR QUIET CORNER"
         title="Miki"
         subtitle="A simple note-taking app for your thoughts"
