@@ -8,6 +8,10 @@ jest.mock('expo-updates', () => ({
   checkForUpdateAsync: jest.fn(),
   fetchUpdateAsync: jest.fn(),
   reloadAsync: jest.fn(),
+  useUpdates: () => ({
+    isDownloading: false,
+    downloadProgress: 0,
+  }),
 }));
 
 jest.mock('react-native-safe-area-context', () => {

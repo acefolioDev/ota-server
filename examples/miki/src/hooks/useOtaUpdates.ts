@@ -1,9 +1,17 @@
 import * as Updates from 'expo-updates';
 import { useState } from 'react';
 import { showMikiAlert } from '../components/MikiAlert';
+import {
+  beginUpdateApply,
+  beginUpdateDownload,
+  mikiReloadScreen,
+  resetUpdateDownload,
+} from '../components/UpdateDownload';
+
+export type UpdateStatus = 'idle' | 'checking' | 'downloading';
 
 export function useOtaUpdates() {
-  const [isCheckingUpdates, setIsCheckingUpdates] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>('idle');
 
   async function checkForUpdate(isAutomaticCheck = false) {
     if (!Updates.isEnabled) {
@@ -15,7 +23,7 @@ export function useOtaUpdates() {
       return;
     }
 
-    setIsCheckingUpdates(true);
+    setUpdateStatus('checking');
     try {
       const update = await Updates.checkForUpdateAsync();
 
@@ -30,26 +38,32 @@ export function useOtaUpdates() {
         return;
       }
 
+      beginUpdateDownload();
+      setUpdateStatus('downloading');
       const result = await Updates.fetchUpdateAsync();
       if (result.isNew) {
-        await Updates.reloadAsync();
-      } else {
-        showMikiAlert({
-          title: 'That one slipped away',
-          message: 'The update could not be downloaded.',
-          tone: 'update',
-        });
+        beginUpdateApply();
+        await Updates.reloadAsync({ reloadScreenOptions: mikiReloadScreen });
+        return;
       }
+
+      resetUpdateDownload();
+      showMikiAlert({
+        title: 'That one slipped away',
+        message: 'The update could not be downloaded.',
+        tone: 'update',
+      });
     } catch (error) {
+      resetUpdateDownload();
       showMikiAlert({
         title: 'Couldn’t check just now',
         message: error instanceof Error ? error.message : 'Could not check for an update.',
         tone: 'note',
       });
     } finally {
-      setIsCheckingUpdates(false);
+      setUpdateStatus('idle');
     }
   }
 
-  return { isCheckingUpdates, checkForUpdate };
+  return { updateStatus, isCheckingUpdates: updateStatus !== 'idle', checkForUpdate };
 }

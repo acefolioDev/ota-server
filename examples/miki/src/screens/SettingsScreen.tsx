@@ -9,7 +9,7 @@ type Props = {
 };
 
 export function SettingsScreen({ noteCount, storageError }: Props) {
-  const { isCheckingUpdates, checkForUpdate } = useOtaUpdates();
+  const { updateStatus, checkForUpdate } = useOtaUpdates();
 
   return (
     <View style={styles.screen}>
@@ -34,14 +34,18 @@ export function SettingsScreen({ noteCount, storageError }: Props) {
         <Pressable
           accessibilityRole="button"
           onPress={() => checkForUpdate(false)}
-          disabled={isCheckingUpdates}
+          disabled={updateStatus !== 'idle'}
           style={({ pressed }) => [
             styles.updateButton,
             pressed && styles.pressed,
-            isCheckingUpdates && styles.disabled,
+            updateStatus !== 'idle' && styles.disabled,
           ]}>
           <Text style={styles.updateButtonText}>
-            {isCheckingUpdates ? 'Checking…' : '↻  Check for updates'}
+            {updateStatus === 'downloading'
+              ? 'Downloading…'
+              : updateStatus === 'checking'
+                ? 'Checking…'
+                : '↻  Check for updates'}
           </Text>
         </Pressable>
       </View>
