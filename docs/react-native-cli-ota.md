@@ -2,6 +2,8 @@
 
 This guide connects a React Native CLI app (one that owns its `ios/` and `android/` projects) to this self-hosted OTA service. It uses Expo's `expo-updates` native client and Expo Updates v1 protocol; it does not use EAS Update as the update server.
 
+For the full path, including the server, an Expo app, publishing, and verification, see the [complete setup guide](./complete-setup.md). This page is the native-project detail for the CLI case.
+
 > **Important:** React Native CLI does not have OTA updates built in. You must add Expo modules and `expo-updates`, configure both native projects, and ship a new native binary before this server can deliver JavaScript updates. OTA cannot change native code, native dependencies, permissions, or other parts of the installed binary.
 
 ## What you need
