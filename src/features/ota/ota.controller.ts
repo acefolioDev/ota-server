@@ -1,40 +1,38 @@
 import type { ElpodElysia } from "@elpod/core";
 import { t } from "elysia";
-import { OtaService } from "./ota.service";
+import { OtaAdminService } from "./ota-admin.service";
+import { OtaAssetService } from "./ota-asset.service";
+import { OtaManifestService } from "./ota-manifest.service";
+import { OtaPublishService } from "./ota-publish.service";
 
-type OtaControllerService = Omit<
-  Pick<
-    OtaService,
-    | "authorizeAdmin"
-    | "getManifest"
-    | "listApps"
-    | "listPendingPublishes"
-    | "publish"
-    | "rollback"
-    | "retryPendingPublish"
-    | "serveAsset"
-    | "setRollout"
-    | "storeAsset"
-  >,
-  "publish" | "retryPendingPublish"
-> & {
-  publish(
-    input: Parameters<OtaService["publish"]>[0],
-  ): Promise<Pick<Awaited<ReturnType<OtaService["publish"]>>, "id" | "createdAt">>;
-  retryPendingPublish(
-    id: string,
-  ): Promise<
-    Pick<
-      NonNullable<Awaited<ReturnType<OtaService["retryPendingPublish"]>>>,
-      "id" | "createdAt"
-    > | null
-  >;
-};
+const expoAssetSchema = t.Object({
+  hash: t.Optional(t.String()),
+  key: t.String({ minLength: 1 }),
+  contentType: t.String({ minLength: 1 }),
+  fileExtension: t.Optional(t.String()),
+  url: t.String({ minLength: 1 }),
+});
 
 export class OtaController {
-  static readonly inject = [OtaService] as const;
+  static readonly needs = [
+    OtaManifestService,
+    OtaPublishService,
+    OtaAssetService,
+    OtaAdminService,
+  ] as const;
 
-  constructor(private readonly service: OtaControllerService) {}
+  constructor(
+    private readonly manifest: Pick<OtaManifestService, "resolve">,
+    private readonly publish: Pick<
+      OtaPublishService,
+      "listPendingPublishes" | "publish" | "retryPendingPublish"
+    >,
+    private readonly assets: Pick<OtaAssetService, "serveAsset" | "storeAsset">,
+    private readonly admin: Pick<
+      OtaAdminService,
+      "authorizeAdmin" | "listApps" | "rollback" | "setRollout"
+    >,
+  ) {}
 
   routes(app: ElpodElysia) {
     return app
@@ -46,71 +44,31 @@ export class OtaController {
         set.headers["cache-control"] = "private, max-age=0";
         set.headers["content-type"] = "application/json";
 
-        if (headers["expo-protocol-version"] !== "1") {
-          set.status = 400;
-          return { error: "expo-protocol-version must be 1" };
-        }
-
-        const platform = headers["expo-platform"];
-        const runtimeVersion = headers["expo-runtime-version"]?.trim();
-        if (platform !== "ios" && platform !== "android") {
-          set.status = 400;
-          return { error: "expo-platform must be ios or android" };
-        }
-        if (!runtimeVersion) {
-          set.status = 400;
-          return { error: "expo-runtime-version is required" };
-        }
-
-        const accept = headers["accept"]?.toLowerCase();
-        if (
-          accept &&
-          !accept.includes("application/json") &&
-          !accept.includes("*/*")
-        ) {
-          set.status = 406;
-          return { error: "This server only supports JSON manifests" };
-        }
-
-        if (headers["expo-expect-signature"]) {
-          set.status = 406;
-          return { error: "Manifest code signing is not configured on this server" };
-        }
-
-        const manifest = await this.service.getManifest({
+        const result = await this.manifest.resolve({
           appSlug: query.app,
-          projectId: headers["expo-project-id"],
-          runtimeVersion,
-          platform,
-          channel: headers["expo-channel-name"],
-          installationId:
-            headers["expo-installation-id"] ?? headers["expo-device-id"],
-          forwardedFor: headers["x-forwarded-for"],
-          realIp: headers["x-real-ip"],
+          headers,
         });
-        if (!manifest) {
-          set.status = 406;
-          return { error: "No active update matches this app, channel, platform, and runtime" };
+        if (!result.ok) {
+          set.status = result.status;
+          return { error: result.error };
         }
-        return manifest;
+        return result.manifest;
       })
-      .get("/assets/:filename", ({ params }) =>
-        this.service.serveAsset(params.filename),
-      )
+      .get("/assets/:filename", ({ params }) => this.assets.serveAsset(params.filename))
       .get("/admin/apps", async ({ headers, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
-        return this.service.listApps();
+        return this.admin.listApps();
       })
       .get("/admin/pending-updates", async ({ headers, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
-        return this.service.listPendingPublishes();
+        return this.publish.listPendingPublishes();
       })
       .post("/admin/pending-updates/:id/retry", async ({ headers, params, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
-        const update = await this.service.retryPendingPublish(params.id);
+        const update = await this.publish.retryPendingPublish(params.id);
         if (!update) {
           set.status = 404;
           return { error: "Pending update not found" };
@@ -123,8 +81,7 @@ export class OtaController {
         async ({ body, headers, set }) => {
           const auth = this.authorize(headers.authorization, set);
           if (auth) return auth;
-
-          const update = await this.service.publish(body);
+          const update = await this.publish.publish(body);
           set.status = 201;
           return { id: update.id, createdAt: update.createdAt };
         },
@@ -144,21 +101,12 @@ export class OtaController {
       .put("/admin/assets/:filename", async ({ headers, params, request, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
-
-        const contentLength = Number(headers["content-length"]);
-        if (Number.isFinite(contentLength) && contentLength > MAX_ASSET_UPLOAD_BYTES) {
+        const stored = await this.assets.storeAsset(params.filename, request);
+        if (stored === "too-large") {
           set.status = 413;
           return { error: "Asset exceeds the 100 MiB upload limit" };
         }
-
-        const contents = await readRequestBody(request, MAX_ASSET_UPLOAD_BYTES);
-        if (!contents) {
-          set.status = 413;
-          return { error: "Asset exceeds the 100 MiB upload limit" };
-        }
-
-        const stored = await this.service.storeAsset(params.filename, contents);
-        if (!stored) {
+        if (stored === "bad-filename") {
           set.status = 400;
           return { error: "Asset filename must contain its matching base64url SHA-256 hash" };
         }
@@ -170,7 +118,7 @@ export class OtaController {
         async ({ body, headers, params, set }) => {
           const auth = this.authorize(headers.authorization, set);
           if (auth) return auth;
-          const update = await this.service.setRollout(params.id, body.rollout);
+          const update = await this.admin.setRollout(params.id, body.rollout);
           if (!update) {
             set.status = 404;
             return { error: "Update not found" };
@@ -186,7 +134,7 @@ export class OtaController {
       .post("/admin/updates/:id/rollback", async ({ headers, params, set }) => {
         const auth = this.authorize(headers.authorization, set);
         if (auth) return auth;
-        const update = await this.service.rollback(params.id);
+        const update = await this.admin.rollback(params.id);
         if (!update) {
           set.status = 404;
           return { error: "Update not found" };
@@ -199,7 +147,7 @@ export class OtaController {
     authorization: string | undefined,
     set: { status?: number | string },
   ) {
-    const result = this.service.authorizeAdmin(authorization);
+    const result = this.admin.authorizeAdmin(authorization);
     if (result === "authorized") return null;
     set.status = result === "unconfigured" ? 503 : 401;
     return {
@@ -209,42 +157,4 @@ export class OtaController {
           : "A valid bearer token is required",
     };
   }
-}
-
-const MAX_ASSET_UPLOAD_BYTES = 100 * 1024 * 1024;
-const expoAssetSchema = t.Object({
-  hash: t.Optional(t.String()),
-  key: t.String({ minLength: 1 }),
-  contentType: t.String({ minLength: 1 }),
-  fileExtension: t.Optional(t.String()),
-  url: t.String({ minLength: 1 }),
-});
-
-async function readRequestBody(
-  request: Request,
-  maxBytes: number,
-): Promise<Uint8Array | null> {
-  const reader = request.body?.getReader();
-  if (!reader) return new Uint8Array();
-
-  const chunks: Uint8Array[] = [];
-  let totalBytes = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    totalBytes += value.byteLength;
-    if (totalBytes > maxBytes) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
-  }
-
-  const contents = new Uint8Array(totalBytes);
-  let offset = 0;
-  for (const chunk of chunks) {
-    contents.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return contents;
 }

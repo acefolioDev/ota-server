@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 import type { ExpoAsset } from "./ota.types";
 
+export function isNodeError(error: unknown, code: string): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error && error.code === code;
+}
+
 export function isInRollout(appId: string, clientId: string, rollout: number): boolean {
   if (rollout >= 100) return true;
   if (rollout <= 0 || !clientId) return false;

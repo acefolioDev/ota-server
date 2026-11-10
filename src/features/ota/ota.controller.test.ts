@@ -1,10 +1,9 @@
 import { expect, test } from "bun:test";
 import { Elysia } from "elysia";
-import { OtaService } from "./ota.service";
-import type { ExpoAsset } from "./ota.types";
+import type { ExpoAsset, PublishUpdateInput } from "./ota.types";
 import { OtaController } from "./ota.controller";
 
-type PublishInput = Parameters<OtaService["publish"]>[0];
+type PublishInput = PublishUpdateInput;
 const validAuthorization = ["Bearer", "unit-test-token"].join(" ");
 
 const launchAsset: ExpoAsset = {
@@ -27,20 +26,26 @@ function createTestApp(
     retryPendingPublish?: (id: string) => Promise<{ id: string; createdAt: Date } | null>;
   } = {},
 ) {
-  const service = {
-    authorizeAdmin: (authorization: string | undefined) =>
-      authorization === validAuthorization ? "authorized" as const : "unauthorized" as const,
-    getManifest: async () => null,
-    listApps: async () => [],
+  const manifest = {
+    resolve: async () => ({ ok: false as const, status: 406 as const, error: "No manifest" }),
+  };
+  const publishing = {
     listPendingPublishes: async () => options.pending ?? [],
     publish: async (input: PublishInput) => publish(input),
-    rollback: async () => null,
     retryPendingPublish: options.retryPendingPublish ?? (async () => null),
-    serveAsset: async () => new Response("Not found", { status: 404 }),
-    setRollout: async () => null,
-    storeAsset: async () => true,
   };
-  return new OtaController(service).routes(new Elysia());
+  const assets = {
+    serveAsset: async () => new Response("Not found", { status: 404 }),
+    storeAsset: async () => "stored" as const,
+  };
+  const admin = {
+    authorizeAdmin: (authorization: string | undefined) =>
+      authorization === validAuthorization ? "authorized" as const : "unauthorized" as const,
+    listApps: async () => [],
+    rollback: async () => null,
+    setRollout: async () => null,
+  };
+  return new OtaController(manifest, publishing, assets, admin).routes(new Elysia());
 }
 
 const publishBody = {
