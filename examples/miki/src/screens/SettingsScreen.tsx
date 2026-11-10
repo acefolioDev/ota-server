@@ -1,5 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MikiMark } from '../components/MikiMark';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useOtaUpdates } from '../hooks/useOtaUpdates';
 
@@ -50,7 +51,10 @@ export function SettingsScreen({ noteCount, storageError }: Props) {
           <Text style={styles.errorText}>{storageError}</Text>
         </View>
       ) : null}
-      <Text style={styles.footer}>Miki · Little thoughts, kept close.</Text>
+      <View style={styles.footerRow}>
+        <MikiMark size={28} />
+        <Text style={styles.footer}>Little thoughts, kept close.</Text>
+      </View>
     </View>
   );
 }
@@ -115,11 +119,16 @@ const styles = StyleSheet.create({
     color: '#8E352A',
     fontSize: 13,
   },
+  footerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'center',
+    marginTop: 'auto',
+    paddingBottom: 20,
+  },
   footer: {
     color: '#A1A39B',
     fontSize: 12,
-    marginTop: 'auto',
-    paddingBottom: 20,
-    textAlign: 'center',
   },
 });
