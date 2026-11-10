@@ -1,7 +1,10 @@
+import { useState } from "preact/hooks";
 import { formatDate, platformLabel } from "../format";
 import type { AppRecord, Release } from "../types";
 import controls from "./controls.module.css";
 import styles from "./ReleaseBoard.module.css";
+
+const PAGE_SIZE = 10;
 
 interface ReleaseBoardProps {
   apps: AppRecord[];
@@ -20,8 +23,10 @@ export function ReleaseBoard({
   onSaveRollout,
   onRollback,
 }: ReleaseBoardProps) {
+  const [pages, setPages] = useState<Record<string, number>>({});
+
   return (
-    <section>
+    <section class={styles.board}>
       <div class={styles.heading}>
         <h2>Applications</h2>
       </div>
@@ -32,32 +37,63 @@ export function ReleaseBoard({
         </div>
       ) : (
         <div class={styles.list}>
-          {apps.map((app) => (
-            <article class={styles.card} key={app.id}>
-              <header class={styles.appHeading}>
-                <div>
-                  <h3>{app.slug}</h3>
-                  <p class={styles.project}>{app.projectId || "No Expo project ID linked"}</p>
-                </div>
-                <span class={styles.count}>{app.updates.length} releases</span>
-              </header>
-              {app.updates.length === 0 ? (
-                <p class={styles.emptyInline}>No releases published for this app.</p>
-              ) : (
-                app.updates.map((release) => (
-                  <ReleaseRow
-                    key={release.id}
-                    release={release}
-                    rollout={rollouts[release.id] ?? release.rollout}
-                    busy={busyId === release.id}
-                    onRolloutChange={onRolloutChange}
-                    onSaveRollout={onSaveRollout}
-                    onRollback={onRollback}
-                  />
-                ))
-              )}
-            </article>
-          ))}
+          {apps.map((app) => {
+            const pageCount = Math.max(1, Math.ceil(app.updates.length / PAGE_SIZE));
+            const page = Math.min(pages[app.id] ?? 0, pageCount - 1);
+            const start = page * PAGE_SIZE;
+            const visible = app.updates.slice(start, start + PAGE_SIZE);
+            return (
+              <article class={styles.card} key={app.id}>
+                <header class={styles.appHeading}>
+                  <div>
+                    <h3>{app.slug}</h3>
+                    <p class={styles.project}>{app.projectId || "No Expo project ID linked"}</p>
+                  </div>
+                  <span class={styles.count}>{app.updates.length} releases</span>
+                </header>
+                {app.updates.length === 0 ? (
+                  <p class={styles.emptyInline}>No releases published for this app.</p>
+                ) : (
+                  <div class={styles.rows}>
+                    {visible.map((release) => (
+                      <ReleaseRow
+                        key={release.id}
+                        release={release}
+                        rollout={rollouts[release.id] ?? release.rollout}
+                        busy={busyId === release.id}
+                        onRolloutChange={onRolloutChange}
+                        onSaveRollout={onSaveRollout}
+                        onRollback={onRollback}
+                      />
+                    ))}
+                  </div>
+                )}
+                {app.updates.length > PAGE_SIZE && (
+                  <div class={styles.pager}>
+                    <span>{start + 1}–{start + visible.length} of {app.updates.length}</span>
+                    <div class={styles.pagerActions}>
+                      <button
+                        class={`${controls.button} ${controls.quiet}`}
+                        type="button"
+                        disabled={page === 0}
+                        onClick={() => setPages((current) => ({ ...current, [app.id]: page - 1 }))}
+                      >
+                        Previous
+                      </button>
+                      <button
+                        class={`${controls.button} ${controls.quiet}`}
+                        type="button"
+                        disabled={page >= pageCount - 1}
+                        onClick={() => setPages((current) => ({ ...current, [app.id]: page + 1 }))}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </article>
+            );
+          })}
         </div>
       )}
     </section>

@@ -12,16 +12,16 @@
 .button:hover:not(:disabled) { background: var(--panel-raised); }
 
 .primary {
-  background: var(--text);
-  color: #101218;
+  background: var(--primary);
+  color: var(--primary-ink);
 }
 
-.primary:hover:not(:disabled) { background: #ffffff; }
+.primary:hover:not(:disabled) { background: var(--primary-hover); }
 
 .quiet { border-color: var(--line); }
 
 .danger {
-  border-color: #5c3038;
+  border-color: var(--danger-line);
   color: var(--danger);
 }
 
@@ -32,10 +32,10 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 10px 12px;
-  background: #0c0f14;
+  background: var(--field);
   color: var(--text);
 }
 
-.field:focus { border-color: #51627f; outline: none; }
+.field:focus { border-color: var(--focus); outline: none; }
 
 .field::placeholder { color: var(--faint); }

@@ -1,5 +1,14 @@
+.board {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .heading {
   display: flex;
+  flex: none;
   align-items: baseline;
   justify-content: space-between;
   margin-bottom: 12px;
@@ -7,14 +16,26 @@
 
 .heading h2 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
 
-.list { display: grid; gap: 14px; }
+.list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
 
 .card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
 }
+
+.rows { min-height: 0; overflow: auto; }
 
 .appHeading {
   display: flex;
@@ -42,8 +63,8 @@
   grid-template-columns: minmax(180px, 1.3fr) minmax(160px, 0.8fr) auto;
   gap: 18px;
   align-items: center;
-  padding: 16px 18px;
-  border-bottom: 1px solid #ffffff0c;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--release-line);
 }
 
 .release:last-child { border-bottom: 0; }
@@ -61,7 +82,7 @@
   font-weight: 700;
 }
 
-.android { background: #143028; color: #8ee0bf; }
+.android { background: var(--android-bg); color: var(--android-text); }
 
 .status {
   border-radius: 99px;
@@ -71,7 +92,7 @@
 }
 
 .active { background: var(--good-bg); color: var(--good); }
-.inactive { background: #2a2d36; color: #b7b1bc; }
+.inactive { background: var(--inactive-bg); color: var(--inactive-text); }
 
 .rollout label {
   display: flex;
@@ -84,7 +105,19 @@
 
 .rollout strong { color: var(--text); }
 
-.range { width: 100%; accent-color: #d5dbe6; }
+.range { width: 100%; accent-color: var(--range); }
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.pagerActions { display: flex; gap: 8px; }
 
 .actions { display: flex; gap: 8px; }
 .actions button { white-space: nowrap; }

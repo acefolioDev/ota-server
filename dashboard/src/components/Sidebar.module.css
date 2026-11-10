@@ -1,8 +1,9 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 28px;
-  min-height: 100vh;
+  gap: 20px;
+  height: 100%;
+  overflow: hidden;
   padding: 22px 18px;
   border-right: 1px solid var(--line);
   background: var(--sidebar);
@@ -42,7 +43,7 @@
   justify-content: space-between;
   border-radius: 8px;
   padding: 9px 10px;
-  background: #ffffff0d;
+  background: var(--nav);
   color: var(--text);
   font-size: 13px;
   font-weight: 600;
@@ -70,7 +71,29 @@
 .label { color: var(--muted); font-size: 12px; font-weight: 600; }
 .hint { margin: 0; color: var(--faint); font-size: 12px; line-height: 1.45; }
 
+.themes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.themeOn, .themeOff {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 8px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.themeOn { background: var(--nav); color: var(--text); }
+
 @media (max-width: 860px) {
-  .sidebar { min-height: 0; border-right: 0; border-bottom: 1px solid var(--line); }
+  .sidebar { height: auto; overflow: hidden; border-right: 0; border-bottom: 1px solid var(--line); }
   .session { margin-top: 0; }
 }

@@ -1,4 +1,4 @@
-.section { margin-bottom: 28px; }
+.section { flex: none; margin-bottom: 16px; }
 
 .heading { margin: 0 0 12px; font-size: 15px; font-weight: 650; letter-spacing: -0.02em; }
 
@@ -9,15 +9,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  border: 1px solid #4a3b24;
+  border: 1px solid var(--warn-line);
   border-radius: 12px;
   padding: 14px 16px;
   background: var(--warn-bg);
 }
 
 .title { font-size: 14px; font-weight: 650; }
-.meta { display: flex; gap: 8px; margin: 6px 0 0; color: #c7b496; font-size: 12px; }
-.hint { margin: 6px 0 0; color: #a89472; font-size: 12px; }
+.meta { display: flex; gap: 8px; margin: 6px 0 0; color: var(--warn-muted); font-size: 12px; }
+.hint { margin: 6px 0 0; color: var(--warn-muted); font-size: 12px; }
 
 @media (max-width: 640px) {
   .card { align-items: stretch; flex-direction: column; }

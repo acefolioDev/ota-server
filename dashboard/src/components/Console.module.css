@@ -1,20 +1,27 @@
 .frame {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 .main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  padding: 28px 32px 48px;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: 20px 24px 16px;
 }
 
 .header {
   display: flex;
+  flex: none;
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .header h1 {
@@ -26,18 +33,28 @@
 
 .lede { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
 
+.workspace {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .alert {
-  margin-bottom: 18px;
-  border: 1px solid #6d3642;
+  flex: none;
+  margin-bottom: 12px;
+  border: 1px solid var(--danger-line);
   border-radius: 10px;
   padding: 12px 14px;
   background: var(--danger-bg);
-  color: #ffc4cc;
+  color: var(--alert-text);
   font-size: 13px;
 }
 
 .footer {
-  margin-top: 36px;
+  flex: none;
+  margin-top: 12px;
   color: var(--faint);
   font-size: 12px;
 }
@@ -51,6 +68,6 @@
 }
 
 @media (max-width: 860px) {
-  .frame { grid-template-columns: 1fr; }
-  .main { padding: 20px 16px 40px; }
+  .frame { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
+  .main { padding: 16px; }
 }

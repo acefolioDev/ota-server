@@ -1,4 +1,5 @@
 import { useConsole } from "../use-console";
+import { useTheme } from "../use-theme";
 import controls from "./controls.module.css";
 import styles from "./Console.module.css";
 import { Overview } from "./Overview";
@@ -8,6 +9,7 @@ import { Sidebar } from "./Sidebar";
 
 export function Console() {
   const consoleState = useConsole();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div class={styles.frame}>
@@ -15,6 +17,8 @@ export function Console() {
         token={consoleState.token}
         pendingCount={consoleState.pendingPublishes.length}
         loading={consoleState.loading}
+        theme={theme}
+        onThemeChange={setTheme}
         onTokenChange={consoleState.setToken}
         onConnect={() => void consoleState.loadApps()}
       />
@@ -36,6 +40,7 @@ export function Console() {
 
         {consoleState.error && <div class={styles.alert} role="alert">{consoleState.error}</div>}
 
+        <div class={styles.workspace}>
         {consoleState.loaded ? (
           <>
             <Overview
@@ -62,6 +67,7 @@ export function Console() {
             {consoleState.loading ? "Loading applications…" : "Connect with the admin token to load releases."}
           </div>
         )}
+        </div>
         <footer class={styles.footer}>Expo Updates Protocol v1 · Assets are immutable and content-addressed.</footer>
       </main>
     </div>
