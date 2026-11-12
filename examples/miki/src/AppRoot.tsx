@@ -13,7 +13,7 @@ import { PinnedScreen } from './screens/PinnedScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { useOtaUpdates } from './hooks/useOtaUpdates';
 
-const showAboutScreen = true;
+const showAboutScreen = false;
 
 export default function AppRoot() {
   const { isCheckingUpdates, checkForUpdate } = useOtaUpdates();
