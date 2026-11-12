@@ -87,10 +87,11 @@ export class OtaManifestService {
       input.forwardedFor?.split(",")[0]?.trim() ||
       input.realIp?.trim() ||
       "";
-    const selected = updates
+    const matched = updates
       .filter((update) => isInRollout(app.id, clientId, update.rollout))
       .at(0);
-    if (!selected) return null;
+    if (!matched) return null;
+    const selected = await this.repo.promoteRestoredRelease(matched);
 
     const storedLaunchAsset = parseStoredJson<unknown>(selected.launchAsset, "launchAsset");
     const launchAsset = launchAssetFrom(selected.id, storedLaunchAsset, selected.bundleUrl);

@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test";
-import { isExpoAsset, isInRollout, parseStoredJson, selectRollbackTarget } from "./ota.utils";
+import {
+  isExpoAsset,
+  isInRollout,
+  parseStoredJson,
+  releaseWasSupersededByRollback,
+  selectRollbackTarget,
+} from "./ota.utils";
 
 test("rollout percentages include every client at 100 and none at 0", () => {
   expect(isInRollout("app", "device", 100)).toBe(true);
@@ -29,6 +35,14 @@ test("rollback leaves a newer active release in place", () => {
   const newer = release("newer", true, "2026-11-03T00:00:00.000Z");
 
   expect(selectRollbackTarget(current, [current, newer])).toBeNull();
+});
+
+test("a restored release needs a newer manifest when a rollback is newer than it", () => {
+  const restored = release("restored", true, "2026-11-01T00:00:00.000Z");
+  const rolledBack = release("rolled-back", false, "2026-11-03T00:00:00.000Z");
+
+  expect(releaseWasSupersededByRollback(restored, [rolledBack])).toBe(true);
+  expect(releaseWasSupersededByRollback(rolledBack, [restored])).toBe(false);
 });
 
 test("rollback has no target when every earlier release was rolled back", () => {

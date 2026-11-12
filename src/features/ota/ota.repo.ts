@@ -1,5 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { DbProvider } from "@infra/db.provider";
-import { selectRollbackTarget } from "./ota.utils";
+import { releaseWasSupersededByRollback, selectRollbackTarget } from "./ota.utils";
 
 interface UpdateRecord {
   appId: string;
@@ -117,8 +118,48 @@ export class OtaRepo {
         .all();
       const target = selectRollbackTarget(current, active);
       await updates.where({ id: current.id }).update({ isActive: false });
-      if (target) await updates.where({ id: target.id }).update({ isActive: true });
+      if (target) await promoteExistingRelease(updates, target.id);
       return { ...current, isActive: false };
     });
   }
+
+  async promoteRestoredRelease<T extends ChannelRelease>(release: T): Promise<T> {
+    const rolledBack = await this.database.prisma.orm.public.Update
+      .where({
+        appId: release.appId,
+        runtimeVersion: release.runtimeVersion,
+        platform: release.platform,
+        channel: release.channel,
+        isActive: false,
+      })
+      .select("createdAt")
+      .all();
+    if (!releaseWasSupersededByRollback(release, rolledBack)) return release;
+
+    const promoted = await promoteExistingRelease(this.database.prisma.orm.public.Update, release.id);
+    return promoted ? { ...release, ...promoted } : release;
+  }
+}
+
+interface ChannelRelease {
+  id: string;
+  appId: string;
+  runtimeVersion: string;
+  platform: string;
+  channel: string;
+  createdAt: Date;
+}
+
+type UpdateCollection = {
+  where(filter: { id: string }): {
+    update(data: { id: string; createdAt: Date; isActive: boolean }): Promise<ChannelRelease | null>;
+  };
+};
+
+function promoteExistingRelease(updates: UpdateCollection, releaseId: string) {
+  return updates.where({ id: releaseId }).update({
+    id: randomUUID(),
+    createdAt: new Date(),
+    isActive: true,
+  });
 }

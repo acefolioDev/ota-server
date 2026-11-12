@@ -11,6 +11,14 @@ export interface RollbackCandidate {
   createdAt: Date;
 }
 
+export function releaseWasSupersededByRollback(
+  release: Pick<RollbackCandidate, "createdAt">,
+  rolledBack: Pick<RollbackCandidate, "createdAt">[],
+): boolean {
+  const releaseTime = release.createdAt.getTime();
+  return rolledBack.some((item) => item.createdAt.getTime() > releaseTime);
+}
+
 export function selectRollbackTarget<T extends RollbackCandidate>(
   current: Pick<RollbackCandidate, "id" | "createdAt">,
   releases: T[],
