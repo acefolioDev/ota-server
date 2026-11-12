@@ -28,4 +28,11 @@ test('shows and switches between the three app screens', async () => {
       .props.onPress();
   });
   expect(renderer.root.findAllByType(Text).some(text => text.props.children === 'Keep Miki up to date')).toBe(true);
+
+  await ReactTestRenderer.act(() => {
+    renderer.root
+      .findByProps({ accessibilityLabel: 'Open About screen' })
+      .props.onPress();
+  });
+  expect(renderer.root.findAllByType(Text).some(text => text.props.children === 'About')).toBe(true);
 });

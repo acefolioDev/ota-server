@@ -7,10 +7,13 @@ import { UpdateDownloadHost } from './components/UpdateDownload';
 import { NoteEditorModal } from './components/NoteEditorModal';
 import { useNotes } from './hooks/useNotes';
 import type { AppScreen, Note } from './types/note';
+import { AboutScreen } from './screens/AboutScreen';
 import { NotesScreen } from './screens/NotesScreen';
 import { PinnedScreen } from './screens/PinnedScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { useOtaUpdates } from './hooks/useOtaUpdates';
+
+const showAboutScreen = true;
 
 export default function AppRoot() {
   const { isCheckingUpdates, checkForUpdate } = useOtaUpdates();
@@ -58,11 +61,17 @@ export default function AppRoot() {
               onTogglePinned={togglePinned}
               onDelete={deleteNote}
             />
+          ) : activeScreen === 'about' && showAboutScreen ? (
+            <AboutScreen />
           ) : (
             <SettingsScreen noteCount={notes.length} storageError={storageError} />
           )}
         </View>
-        <BottomNavigation activeScreen={activeScreen} onChange={setActiveScreen} />
+        <BottomNavigation
+          activeScreen={activeScreen}
+          onChange={setActiveScreen}
+          showAboutScreen={showAboutScreen}
+        />
         <NoteEditorModal
           visible={editorVisible}
           note={editingNote}

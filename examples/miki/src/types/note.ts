@@ -7,4 +7,4 @@ export type Note = {
   updatedAt: number;
 };
 
-export type AppScreen = 'notes' | 'pinned' | 'settings';
+export type AppScreen = 'notes' | 'pinned' | 'settings' | 'about';

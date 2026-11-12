@@ -6,17 +6,21 @@ const tabs: { screen: AppScreen; label: string; icon: string }[] = [
   { screen: 'notes', label: 'Notes', icon: '▤' },
   { screen: 'pinned', label: 'Pinned', icon: '☆' },
   { screen: 'settings', label: 'Settings', icon: '⌘' },
+  { screen: 'about', label: 'About', icon: '◦' },
 ];
 
 type Props = {
   activeScreen: AppScreen;
   onChange: (screen: AppScreen) => void;
+  showAboutScreen: boolean;
 };
 
-export function BottomNavigation({ activeScreen, onChange }: Props) {
+export function BottomNavigation({ activeScreen, onChange, showAboutScreen }: Props) {
+  const visibleTabs = tabs.filter(tab => showAboutScreen || tab.screen !== 'about');
+
   return (
     <View style={styles.container}>
-      {tabs.map(tab => {
+      {visibleTabs.map(tab => {
         const active = activeScreen === tab.screen;
         return (
           <Pressable
