@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { DbProvider } from "@infra/db.provider";
 import { selectRollbackTarget } from "./ota.utils";
 
@@ -118,24 +117,7 @@ export class OtaRepo {
         .all();
       const target = selectRollbackTarget(current, active);
       await updates.where({ id: current.id }).update({ isActive: false });
-      // Expo Updates ignores a manifest older than the running update, so the
-      // restored release is published again with a new id and the current time.
-      if (!target) return { ...current, isActive: false };
-
-      await updates.create({
-        id: randomUUID(),
-        appId: target.appId,
-        runtimeVersion: target.runtimeVersion,
-        platform: target.platform,
-        channel: target.channel,
-        bundleUrl: target.bundleUrl,
-        launchAsset: target.launchAsset,
-        assets: target.assets,
-        metadata: target.metadata,
-        extra: target.extra,
-        rollout: target.rollout,
-        isActive: true,
-      });
+      if (target) await updates.where({ id: target.id }).update({ isActive: true });
       return { ...current, isActive: false };
     });
   }

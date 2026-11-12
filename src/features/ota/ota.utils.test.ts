@@ -16,7 +16,7 @@ test("stored JSON parse failures identify the corrupt field", () => {
   expect(() => parseStoredJson("{", "assets")).toThrow("OTA assets");
 });
 
-test("rollback republishes the newest active release that was not rolled back", () => {
+test("rollback selects the newest existing release that was not rolled back", () => {
   const older = release("older", true, "2026-11-01T00:00:00.000Z");
   const rolledBack = release("rolled-back", false, "2026-11-02T00:00:00.000Z");
   const current = release("current", true, "2026-11-03T00:00:00.000Z");
