@@ -75,14 +75,7 @@ export function useConsole() {
   async function rollback(release: Release) {
     await runUpdateAction(release.id, async () => {
       await rollbackRelease(token, release.id);
-      setApps((current) =>
-        current.map((app) => ({
-          ...app,
-          updates: app.updates.map((item) =>
-            item.id === release.id ? { ...item, isActive: false } : item,
-          ),
-        })),
-      );
+      await loadApps();
     });
   }
 

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { isExpoAsset, isInRollout, parseStoredJson } from "./ota.utils";
+import { isExpoAsset, isInRollout, parseStoredJson, selectRollbackTarget } from "./ota.utils";
 
 test("rollout percentages include every client at 100 and none at 0", () => {
   expect(isInRollout("app", "device", 100)).toBe(true);
@@ -15,6 +15,32 @@ test("rollout assignment is stable for the same app and client", () => {
 test("stored JSON parse failures identify the corrupt field", () => {
   expect(() => parseStoredJson("{", "assets")).toThrow("OTA assets");
 });
+
+test("rollback republishes the newest active release that was not rolled back", () => {
+  const older = release("older", true, "2026-11-01T00:00:00.000Z");
+  const rolledBack = release("rolled-back", false, "2026-11-02T00:00:00.000Z");
+  const current = release("current", true, "2026-11-03T00:00:00.000Z");
+
+  expect(selectRollbackTarget(current, [current, rolledBack, older])?.id).toBe("older");
+});
+
+test("rollback leaves a newer active release in place", () => {
+  const current = release("current", true, "2026-11-01T00:00:00.000Z");
+  const newer = release("newer", true, "2026-11-03T00:00:00.000Z");
+
+  expect(selectRollbackTarget(current, [current, newer])).toBeNull();
+});
+
+test("rollback has no target when every earlier release was rolled back", () => {
+  const current = release("current", true, "2026-11-03T00:00:00.000Z");
+  const rolledBack = release("rolled-back", false, "2026-11-02T00:00:00.000Z");
+
+  expect(selectRollbackTarget(current, [current, rolledBack])).toBeNull();
+});
+
+function release(id: string, isActive: boolean, createdAt: string) {
+  return { id, isActive, createdAt: new Date(createdAt) };
+}
 
 test("Expo assets require the protocol's key, content type, and URL", () => {
   expect(isExpoAsset({ key: "hash", contentType: "image/png", url: "https://cdn/image.png" })).toBe(true);

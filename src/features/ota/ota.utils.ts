@@ -5,6 +5,27 @@ export function isNodeError(error: unknown, code: string): error is NodeJS.Errno
   return error instanceof Error && "code" in error && error.code === code;
 }
 
+export interface RollbackCandidate {
+  id: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+export function selectRollbackTarget<T extends RollbackCandidate>(
+  current: Pick<RollbackCandidate, "id" | "createdAt">,
+  releases: T[],
+): T | null {
+  const currentTime = current.createdAt.getTime();
+  const active = releases.filter((release) => release.isActive && release.id !== current.id);
+  if (active.some((release) => release.createdAt.getTime() > currentTime)) return null;
+
+  return (
+    active
+      .filter((release) => release.createdAt.getTime() <= currentTime)
+      .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime())[0] ?? null
+  );
+}
+
 export function isInRollout(appId: string, clientId: string, rollout: number): boolean {
   if (rollout >= 100) return true;
   if (rollout <= 0 || !clientId) return false;

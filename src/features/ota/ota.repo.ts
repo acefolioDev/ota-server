@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import { DbProvider } from "@infra/db.provider";
+import { selectRollbackTarget } from "./ota.utils";
 
 interface UpdateRecord {
   appId: string;
@@ -99,9 +101,42 @@ export class OtaRepo {
   }
 
   async rollback(updateId: string) {
-    const updated = await this.database.prisma.orm.public.Update
-      .where({ id: updateId })
-      .update({ isActive: false });
-    return updated ?? null;
+    return this.database.prisma.transaction(async (tx) => {
+      const updates = tx.orm.public.Update;
+      const current = await updates.where({ id: updateId }).forUpdate().first();
+      if (!current?.isActive) return current;
+
+      const active = await updates
+        .where({
+          appId: current.appId,
+          runtimeVersion: current.runtimeVersion,
+          platform: current.platform,
+          channel: current.channel,
+          isActive: true,
+        })
+        .forUpdate()
+        .all();
+      const target = selectRollbackTarget(current, active);
+      await updates.where({ id: current.id }).update({ isActive: false });
+      // Expo Updates ignores a manifest older than the running update, so the
+      // restored release is published again with a new id and the current time.
+      if (!target) return { ...current, isActive: false };
+
+      await updates.create({
+        id: randomUUID(),
+        appId: target.appId,
+        runtimeVersion: target.runtimeVersion,
+        platform: target.platform,
+        channel: target.channel,
+        bundleUrl: target.bundleUrl,
+        launchAsset: target.launchAsset,
+        assets: target.assets,
+        metadata: target.metadata,
+        extra: target.extra,
+        rollout: target.rollout,
+        isActive: true,
+      });
+      return { ...current, isActive: false };
+    });
   }
 }
